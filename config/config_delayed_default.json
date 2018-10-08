@@ -1,0 +1,23 @@
+{
+    "comments": "AmBe Delayed event selection cuts for DC Sacrifice study", 
+    "E_high": 4.0, 
+    "E_low": 1.0, 
+    "nhits_low": 7,
+    "nhits_high": 20, 
+    "Z_high": 600, 
+    "Z_low": -600, 
+    "fitValid": true,
+    "AVudotrCut": false,
+    "AVudotrCut_rcut": 4500,
+    "b14_low": null,
+    "b14_high": null,
+    "itr_low": null,
+    "itr_high": null,
+    "sacDCmask": 73244,
+    "sacpath_DCmask": null, 
+    "path_trigmask": null, 
+    "r_high": 5300, 
+    "r_low": 0,
+    "udotr_low": null,
+    "udotr_high": null 
+}

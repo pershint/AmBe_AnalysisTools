@@ -1,5 +1,5 @@
 {
-    "comments": "found with AmBe central data, central N16 data, and AmBe background runs.  nhit_p>=17, nhit_d>=7, fitValid_p==1, fitValid_d==1",
+    "comments": "found with AmBe central data, central N16 data, and AmBe background runs.  nhit_p>=17, nhit_d>=7, fitValid_p==1, fitValid_d==1. N16 e_PA was 0.012 pm 0.002",
     "PE": {
         "v": 0.41,
         "u": 0.002 
@@ -10,20 +10,20 @@
         "u": 0.005
     },
     "e_DT": {
-        "v": 0.022,
-        "u": 0.009
+        "v": 0.018,
+        "u": 0.012
     },
     "e_PA": {
-        "v": 0.012,
-        "u": 0.002
+        "v": 0.011,
+        "u": 0.007
     },
     "e_PB": {
         "v": 0.106,
         "u": 0.013
     },
     "e_DB": {
-        "v": 0.057,
-        "u": 0.040
+        "v": 0.038,
+        "u": 0.035
     },
     "T_c": 10787.0,
     "N_T": {

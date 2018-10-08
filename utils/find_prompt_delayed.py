@@ -159,6 +159,9 @@ if __name__ == '__main__':
     waterFit_p  = np.zeros(1,dtype=int)
     fitValid_p  = np.zeros(1,dtype=int)
     posr_p      = np.zeros(1,dtype=float64)
+    posr3_p      = np.zeros(1,dtype=float64)
+    triggerWord_p      = np.zeros(1,dtype=int)
+    udotr_p      = np.zeros(1,dtype=float64)
     beta14_p    = np.zeros(1,dtype=float64)
     itr_p       = np.zeros(1,dtype=float64)
 
@@ -175,10 +178,13 @@ if __name__ == '__main__':
     nhitsCleaned_d  = np.zeros(1,dtype=int)
     dcApplied_d = np.zeros(1,dtype=long)
     dcFlagged_d = np.zeros(1,dtype=long)
+    triggerWord_d      = np.zeros(1,dtype=int)
     runID_d     = np.zeros(1,dtype=int)
     waterFit_d  = np.zeros(1,dtype=int)
     fitValid_d  = np.zeros(1,dtype=int)
     posr_d      = np.zeros(1,dtype=float64)
+    posr3_d      = np.zeros(1,dtype=float64)
+    udotr_d      = np.zeros(1,dtype=float64)
     beta14_d    = np.zeros(1,dtype=float64)
     itr_d       = np.zeros(1,dtype=float64)
 
@@ -243,6 +249,8 @@ if __name__ == '__main__':
         t_root.Branch('posy_p',      posy_p,   'posy_p/D')
         t_root.Branch('posx_p',      posx_p,   'posx_p/D')
         t_root.Branch('posr_p',      posr_p,   'posr_p/D')
+        t_root.Branch('posr3_p',      posr3_p,   'posr3_p/D')
+        t_root.Branch('udotr_p',      udotr_p,   'udotr_p/D')
         t_root.Branch('dirz_p',      dirz_p,   'dirz_p/D')
         t_root.Branch('diry_p',      diry_p,   'diry_p/D')
         t_root.Branch('dirx_p',      dirx_p,   'dirx_p/D')
@@ -251,6 +259,7 @@ if __name__ == '__main__':
         t_root.Branch("nhitsCleaned_p", nhitsCleaned_p, 'nhitsCleaned_p/I')
         t_root.Branch("dcApplied_p", dcApplied_p,   'dcApplied_p/L')
         t_root.Branch("dcFlagged_p", dcFlagged_p,   'dcFlagged_p/L')
+        t_root.Branch("triggerWord_p", triggerWord_p,   'triggerWord_p/L')
         t_root.Branch("runID_p", runID_p,   'runID_p/I')
         t_root.Branch("waterFit_p", waterFit_p, 'waterFit_p/I')
         t_root.Branch("fitValid_p", fitValid_p, "fitValid_p/I")
@@ -263,6 +272,8 @@ if __name__ == '__main__':
         t_root.Branch('posy_d',      posy_d,   'posy_d/D')
         t_root.Branch('posx_d',      posx_d,   'posx_d/D')
         t_root.Branch('posr_d',      posr_d,   'posr_d/D')
+        t_root.Branch('posr3_d',      posr3_d,   'posr3_d/D')
+        t_root.Branch('udotr_d',      udotr_d,   'udotr_d/D')
         t_root.Branch('dirz_d',      dirz_d,   'dirz_d/D')
         t_root.Branch('diry_d',      diry_d,   'diry_d/D')
         t_root.Branch('dirx_d',      dirx_d,   'dirx_d/D')
@@ -271,6 +282,7 @@ if __name__ == '__main__':
         t_root.Branch("nhitsCleaned_d", nhitsCleaned_d, 'nhitsCleaned_d/I')
         t_root.Branch("dcApplied_d", dcApplied_d,   'dcApplied_d/L')
         t_root.Branch("dcFlagged_d", dcFlagged_d,   'dcFlagged_d/L')
+        t_root.Branch("triggerWord_d", triggerWord_d,   'triggerWord_d/L')
         t_root.Branch("runID_d", runID_d,   'runID_d/I')
         t_root.Branch("waterFit_d", waterFit_d, 'waterFit_d/I')
         t_root.Branch("fitValid_d", fitValid_d, "fitValid_d/I")
@@ -332,13 +344,16 @@ if __name__ == '__main__':
                     posy_p[0]        = AmBeChain.posy
                     posz_p[0]      = AmBeChain.posz
                     posr_p[0]        = AmBeChain.posr
+                    posr3_p[0]        = AmBeChain.posr3
+                    udotr_p[0]        = AmBeChain.udotr
                     dirx_p[0]      = AmBeChain.dirx
                     diry_p[0]      = AmBeChain.diry 
                     dirz_p[0]      = AmBeChain.dirz 
                     energy_p[0]    = AmBeChain.energy 
                     nhitsCleaned_p[0]  = AmBeChain.nhitsCleaned 
                     dcApplied_p[0] = AmBeChain.dcApplied 
-                    dcFlagged_p[0] = AmBeChain.dcFlagged 
+                    dcFlagged_p[0] = AmBeChain.dcFlagged
+                    triggerWord_p[0] = AmBeChain.triggerWord 
                     runID_p[0]     = AmBeChain.runID 
                     waterFit_p[0]  = AmBeChain.waterFit
                     beta14_p[0]  = AmBeChain.beta14
@@ -359,6 +374,8 @@ if __name__ == '__main__':
                     uTNSecs_d[0]        = AmBeChain.uTNSecs
                     uTSecs_d[0]      = AmBeChain.uTSecs
                     posr_d[0]        = AmBeChain.posr
+                    posr3_d[0]        = AmBeChain.posr3
+                    udotr_d[0]        = AmBeChain.udotr
                     dirx_d[0]      = AmBeChain.dirx
                     diry_d[0]      = AmBeChain.diry 
                     dirz_d[0]      = AmBeChain.dirz 
@@ -366,6 +383,7 @@ if __name__ == '__main__':
                     nhitsCleaned_d[0]  = AmBeChain.nhitsCleaned 
                     dcApplied_d[0] = AmBeChain.dcApplied 
                     dcFlagged_d[0] = AmBeChain.dcFlagged 
+                    triggerWord_d[0] = AmBeChain.triggerWord 
                     runID_d[0]     = AmBeChain.runID 
                     beta14_d[0]  = AmBeChain.beta14
                     itr_d[0]  = AmBeChain.itr
@@ -382,16 +400,6 @@ if __name__ == '__main__':
                             continue
                     interevent_time[0] = Buffer_times[delayedindex] - Buffer_times[i]
  
-                    #nsp = cp.deepcopy(uTNSecs_p[0])
-                    #sp = cp.deepcopy(uTSecs_p[0])
-                    #nsd = cp.deepcopy(uTNSecs_d[0])
-                    #sd = cp.deepcopy(uTSecs_d[0])
-                    #if sp == sd:
-                    #    interevent_time[0] = nsd - nsp
-                    #elif (sd - sp) > 0:
-                    #    interevent_time[0] = (sd-sp)*1.0E9 + nsd - nsp
-                    #else:
-                    #    continue
                     event_number[0] = pairnum
                     t_root.Fill()
                     found_pair = True
