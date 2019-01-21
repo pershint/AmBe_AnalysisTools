@@ -30,7 +30,7 @@ parser.add_argument('--distcut', dest='INTERDIST', action='store',type=float,
         help='Only consider IBD candidates with an interevent_dist <= input.'+\
                 'Will include events with no fitValid, but cut those with' +\
                 'fitValid and failing the cut')
-parser.add_argument('--fitValid', dest='FITVALID', action='store_true',
+parser.add_argument('--fitValid', dest='FITVALID', action='store', type=bool,
         help='Only include events that have a valid fit for IBD candidates')
 parser.add_argument('--posrcut', dest='RADIUSCUT', action='store',
         help='Only consider IBD candidates with an interevent distance <= input.'+\
@@ -83,7 +83,7 @@ def deleteBuffEv(Buffer_nhits, Buffer_times, Buffer_entrynums):
 basepath = os.path.dirname(__file__)
 FilesInBunch = 1
 #######NAME OF OUTPUT FILE##########
-fileN = 'IBD_Candidates_AmBeBkg_allfits'  #.ntuple.root is appended later
+fileN = 'IBD_Candidates_AmBeIntMC'  #.ntuple.root is appended later
 
 #######NAME OF TREE WITH DATA########
 dattree = "output"

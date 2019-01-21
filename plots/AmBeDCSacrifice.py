@@ -12,8 +12,9 @@ import time
 
 
 class AmBeSacrificeComparer(object):
-    def __init__(self,rootfiles_data,rootfiles_mc,cdict_prompt,cdict_delayed):
+    def __init__(self,rootfiles_data,rootfiles_mc,cdict_prompt,cdict_delayed,cdict_pair):
         self.cdict = {'prompt':cdict_prompt,'delayed':cdict_delayed}
+        self.cdict_pair = cdict_pair
         self.top_cuts = {'prompt': {'data': [], 'MC': []}, 'delayed': {'data':[], 'MC':[]}}
         self.rootfiles_data = rootfiles_data
         self.rootfiles_mc = rootfiles_mc
@@ -67,6 +68,11 @@ class AmBeSacrificeComparer(object):
         '''Defines the preliminary cuts for the prompt and delayed events for both
         data and MC files'''
         for key in self.cdict:
+            for entry in self.cdict_pair: #apply to both prompt and delayed
+                if self.cdict_pair[entry] is not None and entry == "interevent_dist":
+                    self.precuts_data[key].append("interevent_dist<%s"%(str(self.cdict_pair[entry])))
+                if self.cdict_pair[entry] is not None and entry == "interevent_time":
+                    self.precuts_data[key].append("interevent_time<%s"%(str(self.cdict_pair[entry])))
             if key == "prompt":
                 suf = "_p"
             elif key == "delayed":
@@ -295,9 +301,9 @@ class AmBeSacrificeComparer(object):
     def ShowSacrificePlot(self,fittotal=True,title=None,evtype="prompt",dattype='data',savedir="."):
         '''Plots the data cleaning sacrifice as a function of the analyzed variable'''
         sns.set_style("whitegrid")
-        xkcd_colors = ['black','slate blue', 'fluro green', 'brown', 'blue',
+        xkcd_colors = ['black','slate blue', 'fluro green', 'red', 'blue',
                 'yellowish orange', 'warm pink', 'light eggplant', 'clay', 'leaf',
-                'aqua blue','vomit', 'red','twilight']
+                'aqua blue','vomit', 'brown','twilight']
         sns.set_palette(sns.xkcd_palette(xkcd_colors))#,len(self.sac_percut)))
         fig = plt.figure()
         fig.set_size_inches(18.5,11.5)
@@ -308,7 +314,7 @@ class AmBeSacrificeComparer(object):
                 plt.errorbar(x=thiscut_dict.vardat, 
                         y=thiscut_dict.fractional_sacrifice,
                         yerr=thiscut_dict.fs_uncertainty,
-                        linestyle='none', marker='o', label=cut, markersize=8,
+                        linestyle='none', marker='o', label=cut, markersize=9,
                         elinewidth=2, capsize=0)
         else:
             fracsum,fracuncsum=[],[]
@@ -318,13 +324,13 @@ class AmBeSacrificeComparer(object):
                     plt.errorbar(x=thiscut_dict.vardat, 
                             y=thiscut_dict.fractional_sacrifice,
                             yerr=thiscut_dict.fs_uncertainty,
-                            linestyle='none', marker='o', label=cut, markersize=8,
+                            linestyle='none', marker='o', label=cut, markersize=9,
                             elinewidth=2, capsize=0)
                 else:
                     fracsum.append(self.sac_percut[evtype][dattype][cut].fractional_sacrifice)
                     fracuncsum.append(self.sac_percut[evtype][dattype][cut].fs_uncertainty)
             plt.errorbar(x=self.sac_percut[evtype][dattype][cut].vardat,y=sum(fracsum),yerr=sum(fracuncsum),
-                    linestyle='none',marker='o', capsize=0, elinewidth=2, label='All other cuts', markersize=8)
+                    linestyle='none',marker='o', capsize=0, elinewidth=2, label='All other cuts', markersize=9)
     
         if fittotal is True:
             popt, pcov = spc.curve_fit(self._flatline, 
@@ -339,7 +345,9 @@ class AmBeSacrificeComparer(object):
                 print("Fit to total sacrifice likely failed.  You may not have enough data"+\
                         "in this region to fit a straight line.")
                 raise
-            plt.axhline(popt, linewidth=3, alpha=0.8, color='k',label= r'fit: $\mu = %f,unc = %f$' % (float(popt[0]), float(stdev[0])))
+            wstdev = self._weighted_stdev(self.sac_percut[evtype][dattype]["total"].fractional_sacrifice,
+                    float(popt[0]),self.sac_percut[evtype][dattype]["total"].fs_uncertainty)
+            plt.axhline(popt, linewidth=3, alpha=0.8, color='k',label= r'fit: $\mu = %f, fit unc = %f, dev. from fit = %f $' % (float(popt[0]), float(stdev[0]),float(wstdev)))
         legend = plt.legend(loc=3,frameon=1)
         frame = legend.get_frame()
         frame.set_facecolor("white")
@@ -361,16 +369,16 @@ class AmBeSacrificeComparer(object):
         else: 
             plt.title(title,fontsize=36)
         variable = self.sac_percut_metadata["variable"]
-        plt.savefig(savedir+"/DCSac_%s.pdf"%(variable))
-        #plt.show()
+        plt.savefig(savedir+"/DCSac_%s_%s_%s.pdf"%(dattype,evtype,variable))
+        plt.show()
         plt.close()
 
     def DataMCSacCompare(self,title=None,evtype="prompt",savedir="."):
         '''Plots the total sacrifice evaluated for the Data and MC'''
         sns.set_style("whitegrid")
-        xkcd_colors = ['black','red', 'fluro green', 'brown', 'blue',
+        xkcd_colors = ['black','slate blue', 'fluro green', 'red', 'blue',
                 'yellowish orange', 'warm pink', 'light eggplant', 'clay', 'leaf',
-                'aqua blue','vomit', 'red','twilight']
+                'aqua blue','vomit', 'brown','twilight']
         sns.set_palette(sns.xkcd_palette(xkcd_colors))#,len(self.sac_percut)))
         fig = plt.figure()
         fig.set_size_inches(18.5,11.5)
@@ -380,7 +388,7 @@ class AmBeSacrificeComparer(object):
             plt.errorbar(x=thisdat_sactotal.vardat, 
                     y=thisdat_sactotal.fractional_sacrifice,
                     yerr=thisdat_sactotal.fs_uncertainty,
-                    linestyle='none', marker='o', label=dattype, markersize=8,
+                    linestyle='none', marker='o', label=dattype, markersize=9,
                     elinewidth=2, capsize=0)
         legend = plt.legend(loc=3,frameon=1)
         frame = legend.get_frame()
@@ -403,8 +411,8 @@ class AmBeSacrificeComparer(object):
         else: 
             plt.title(title,fontsize=36)
         variable = self.sac_percut_metadata["variable"]
-        plt.savefig(savedir+"/DataMCSacrifices_%s.pdf"%(variable))
-        #plt.show()
+        plt.savefig(savedir+"/DataMCSacrifices_%s_%s.pdf"%(evtype,variable))
+        plt.show()
         plt.close()
 
     def PlotDataMCSacRatio(self,fittotal=True,title=None,evtype='prompt',savedir="."):
@@ -430,8 +438,8 @@ class AmBeSacrificeComparer(object):
         plt.errorbar(x=self.sac_percut[evtype]['data']["total"].vardat, 
                 y=ratio,
                 yerr=ratio_unc,
-                linestyle='none', marker='o', label="Data/MC Ratio", markersize=6,
-                elinewidth=3, capsize=0)
+                linestyle='none', marker='o', label="Data/MC Ratio", markersize=12,
+                elinewidth=4, capsize=0)
         if fittotal is True:
             popt, pcov = spc.curve_fit(self._flatline, self.sac_percut[evtype]['data']['total'].vardat, ratio,
                     p0=[0.98], sigma=ratio_unc)
@@ -464,7 +472,71 @@ class AmBeSacrificeComparer(object):
             plt.title(title,fontsize=36)
         plt.tick_params(labelsize=32)
         variable = self.sac_percut_metadata["variable"]
-        plt.savefig(savedir+"/DataMCRatio_%s.pdf"%(variable))
-        #plt.show()
+        plt.savefig(savedir+"/DataMCRatio_%s_%s.pdf"%(evtype,variable))
+        plt.show()
+        plt.close()
+
+    def PlotDataMCAccRatio(self,fittotal=True,title=None,evtype='prompt',savedir="."):
+        '''Plots the ratio of the data to MC total sacrifice bin-by-bin, as well as the best fit
+        if title is None, has a default title to go with'''
+        if self.sac_percut is None:
+            print("You must first analyze the input root data!")
+            return
+        sns.set_style("whitegrid")
+        xkcd_colors = ['blue','black',
+                'yellowish orange', 'warm pink', 'light eggplant', 'clay', 'red', 'leaf',
+                'aqua blue','vomit', 'black','twilight']
+        sns.set_palette(sns.xkcd_palette(xkcd_colors))#,len(self.sac_percut)))
+        fig = plt.figure()
+        fig.set_size_inches(18.5,11.5)
+        ax = fig.add_subplot(1,1,1)
+        #self.sac_percut = self._DeleteEmptyBins_all(self.sac_percut)
+        data_sac = self.sac_percut[evtype]['data']["total"].fractional_sacrifice 
+        mc_sac = self.sac_percut[evtype]['MC']["total"].fractional_sacrifice
+        data_acc = np.ones(len(data_sac)) - data_sac
+        mc_acc = np.ones(len(mc_sac)) - mc_sac
+        ratio =  data_acc / mc_acc
+        ratio_unc = np.sqrt(self.sac_percut[evtype]["MC"]["total"].fs_uncertainty**2 + \
+                self.sac_percut[evtype]["data"]["total"].fs_uncertainty**2)
+        ratio_unc = pandas.Series(ratio_unc)
+        plt.errorbar(x=self.sac_percut[evtype]['data']["total"].vardat, 
+                y=ratio,
+                yerr=ratio_unc,
+                linestyle='none', marker='o', label="Data/MC Acc.Ratio", markersize=12,
+                elinewidth=5, capsize=0)
+        if fittotal is True:
+            popt, pcov = spc.curve_fit(self._flatline, self.sac_percut[evtype]['data']['total'].vardat, ratio,
+                    p0=[0.98], sigma=ratio_unc)
+            #one standard deviation
+            print("BEST FIT: " + str(popt))
+            print("PCOVARIANCE: " + str(pcov))
+            stdev = np.sqrt(np.diag(pcov))
+            plt.axhline(popt, linewidth=3, alpha=0.8, color='k',label= r'fit: $\mu = %f,unc = %f$' % (float(popt[0]), float(stdev[0])))
+            print("WEIGHTED STANDARD DEVIATION FROM FLAT: " + str(self._weighted_stdev(ratio,
+                float(popt[0]),ratio_unc)))
+        legend = plt.legend(loc=3,frameon=1)
+        frame = legend.get_frame()
+        frame.set_facecolor("white")
+        y_formatter = mpl.ticker.ScalarFormatter(useOffset=False)
+        ax.yaxis.set_major_formatter(y_formatter)
+        #plt.yscale("log")
+        plt.ylabel("Ratio",fontsize=34)
+        varindict = False
+        for var in self.xlabel_dict:
+            if self.sac_percut_metadata["variable"] == var:
+                plt.xlabel(self.xlabel_dict[var],fontsize=32)
+                varindict = True
+            else:
+                if varindict is False: 
+                    plt.xlabel(self.sac_percut_metadata["variable"],fontsize=32)
+        if title is None:
+            plt.title("Data/MC data cleaning acceptance ratio \n"+ \
+                    "event type %s"%(evtype),fontsize=36)
+        else: 
+            plt.title(title,fontsize=36)
+        plt.tick_params(labelsize=32)
+        variable = self.sac_percut_metadata["variable"]
+        plt.savefig(savedir+"/DataMCRatio_%s_%s.pdf"%(evtype,variable))
+        plt.show()
         plt.close()
 

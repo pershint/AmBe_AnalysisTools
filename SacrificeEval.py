@@ -11,6 +11,7 @@ import plots.AmBeDCSacrifice as ab
 DATADIR = "./rootfiles"
 PCONFIGFILE = "./config/config_prompt_default.json"
 DCONFIGFILE = "./config/config_delayed_default.json"
+BOTHCONFIGFILE = "./config/config_pair_default.json"
 
 if __name__=='__main__':
     print("LET US BEGIN")
@@ -18,11 +19,13 @@ if __name__=='__main__':
         pconfig = json.load(f)
     with open(DCONFIGFILE,"r") as f:
         dconfig = json.load(f)
+    with open(BOTHCONFIGFILE,"r") as f:
+        bconfig = json.load(f)
     #First, get the rootfile names for all data and MC
     datafiles = glob.glob("%s/data/*.root"%(DATADIR))
     mcfiles = glob.glob("%s/mc/*.root"%(DATADIR))
     #Now, start up the sacrifice analyzer
-    SacAnalyzer = ab.AmBeSacrificeComparer(datafiles,mcfiles,pconfig,dconfig)
+    SacAnalyzer = ab.AmBeSacrificeComparer(datafiles,mcfiles,pconfig,dconfig,bconfig)
     #Set the number of bins we want when plotting/analyzing
     SacAnalyzer.SetPromptBinNumber(4)
     SacAnalyzer.SetDelayedBinNumber(4)
@@ -31,8 +34,13 @@ if __name__=='__main__':
     SacAnalyzer.AnalyzeData(var='nhits')
     #Now, lets try to plot out the prompt event's sacrifice for the variable analyze
     #We will make the plot for the MC files' prompt events
-    SacAnalyzer.ShowSacrificePlot(evtype='prompt',dattype='data',fittotal=False)
+    SacAnalyzer.ShowSacrificePlot(evtype='prompt',dattype='data',fittotal=True)
+    SacAnalyzer.ShowSacrificePlot(evtype='prompt',dattype='MC',fittotal=True)
+    SacAnalyzer.ShowSacrificePlot(evtype='delayed',dattype='data',fittotal=True)
+    SacAnalyzer.ShowSacrificePlot(evtype='delayed',dattype='MC',fittotal=True)
     #Lets do a data/MC comparison as well for the delayed events
-    SacAnalyzer.DataMCSacCompare(evtype="delayed")
+    SacAnalyzer.DataMCSacCompare(evtype="prompt")
     #And let's look at the Data/MC sacrifice ratio
     SacAnalyzer.PlotDataMCSacRatio(evtype='prompt',fittotal=False)
+    SacAnalyzer.PlotDataMCAccRatio(evtype='prompt',fittotal=False)
+    SacAnalyzer.PlotDataMCAccRatio(evtype='delayed',fittotal=False)
