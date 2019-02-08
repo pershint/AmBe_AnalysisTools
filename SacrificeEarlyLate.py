@@ -7,8 +7,9 @@ import glob
 import numpy as np
 import os,sys
 import plots.AmBeDCSacrifice as ab
+import plots.EarlyLatePlots as el
 
-DATADIR = "./rootfiles"
+DATADIR = "./rootfiles/fitValid"
 PCONFIGFILE = "./config/config_prompt_default.json"
 DCONFIGFILE = "./config/config_delayed_default.json"
 EARLYCONFIGFILE = "./config/early_pair_config.json"
@@ -46,9 +47,7 @@ if __name__=='__main__':
     #We will make the plot for the MC files' prompt events
     EarlySacAnalyze.ShowSacrificePlot(evtype='delayed',dattype='data',fittotal=True)
     LateSacAnalyze.ShowSacrificePlot(evtype='delayed',dattype='data',fittotal=True)
-    #Lets do a data/MC comparison as well for the delayed events
-    EarlySacAnalyze.DataMCSacCompare(evtype="delayed")
-    LateSacAnalyze.DataMCSacCompare(evtype="delayed")
-    #And let's look at the Data/MC sacrifice ratio
-    EarlySacAnalyze.PlotDataMCSacRatio(evtype='delayed',fittotal=False)
-    LateSacAnalyze.PlotDataMCAccRatio(evtype='delayed',fittotal=False)
+
+    #Let's try the new tool
+    elplotter = el.EarlyLateSacComparer(earlysacs, latesacs, earlymeta, latemeta)
+    elplotter.PlotDataSacTotalDifference(fitdiff=True,title=None,evtype='delayed')

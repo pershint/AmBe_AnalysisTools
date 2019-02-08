@@ -1,4 +1,5 @@
 import numpy as np
+import seaborn as sns
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import scipy.optimize as spc
@@ -6,7 +7,7 @@ import pandas
 import time
 
 
-class SacrificeDataCompareer(object):
+class EarlyLateSacComparer(object):
     '''This class takes in two sac_percut pandas dataframes and two metadata
     dictionaries that are returned after running the AmBeDCSacrifice method
     AnalyzeData on SNO+ ntules.'''
@@ -16,13 +17,18 @@ class SacrificeDataCompareer(object):
         self.d2 = dataframe2
         self.m1 = data1meta
         self.m2 = data2meta
+        self.xlabel_dict = {'energy': 'Energy (MeV)', 'udotr': r'$U . R$',
+                'posr3': r'$(R/R_{AV})^{3}$','posr':'Radius (mm)'}
 
     def _weighted_stdev(self,vals,valavg, uncs):
         weights = 1/(uncs**2)
         return np.sqrt((len(weights)*np.sum(weights*(vals-valavg)**2))/((len(weights)-1)*np.sum(weights)))
-
-    def PlotDataSacTotalDifference(self,fitdiff=True,title=None,evtype='prompt',savedir="."):
-        '''Plots the difference between the acceptance ratios ofdataframe1 and dataframe2.
+    
+    def _flatline(self,x,b):
+        return b
+    
+    def PlotDataSacTotalDifference(self,fitdiff=True,title=None,evtype='delayed',savedir="."):
+        '''Plots the weighted difference of the sacrifices of ofdataframe1 and dataframe2.
         the error is taken as the two errors in quadrature'''
         if self.d1 is None or self.d2 is None:
             print("You must first give the class dataframes to parse!")
@@ -48,8 +54,8 @@ class SacrificeDataCompareer(object):
         num_tot = num_d1 + num_d2
         #Do a weighted subtraction of the two
         subterm = (float(num_d2)/float(num_tot))*d2_sac
-        subterm_unc = subterm*np.sqrt((1/float(num_d2)) + (1/float(num_tot) + (1/d2_sac_unc)**2))
-        d1corr = d1_sac - (float(num_d2)/float(num_tot))*d2_sac
+        subterm_unc = subterm*np.sqrt((1/float(num_d2)) + (1/float(num_tot)) + (d2_sac_unc/d2_sac)**2)
+        d1corr_sac = d1_sac - (float(num_d2)/float(num_tot))*d2_sac
         d1corr_sac_unc = np.sqrt(d1_sac_unc**2 + subterm_unc**2)
         d1corr_sac_unc = pandas.Series(d1corr_sac_unc)
         plt.errorbar(x=self.d1[evtype]['data']["total"].vardat, 
@@ -57,7 +63,7 @@ class SacrificeDataCompareer(object):
                 yerr=d1corr_sac_unc,
                 linestyle='none', marker='o', label="Delayed sacrifice", markersize=12,
                 elinewidth=5, capsize=0)
-        if fittotal is True:
+        if fitdiff is True:
             popt, pcov = spc.curve_fit(self._flatline, self.d1[evtype]['data']['total'].vardat, d1corr_sac,
                     p0=[0.98], sigma=d1corr_sac_unc)
             #one standard deviation
@@ -76,19 +82,19 @@ class SacrificeDataCompareer(object):
         plt.ylabel("Fractional sacrifice",fontsize=34)
         varindict = False
         for var in self.xlabel_dict:
-            if self.sac_percut_metadata["variable"] == var:
+            if self.m1["variable"] == var:
                 plt.xlabel(self.xlabel_dict[var],fontsize=32)
                 varindict = True
             else:
                 if varindict is False: 
-                    plt.xlabel(self.sac_percut_metadata["variable"],fontsize=32)
+                    plt.xlabel(self.m1["variable"],fontsize=32)
         if title is None:
             plt.title("Delayed data cleaning sacrifice corrected for background estimate \n"+ \
                     "event type %s"%(evtype),fontsize=36)
         else: 
             plt.title(title,fontsize=36)
         plt.tick_params(labelsize=32)
-        variable = self.sac_percut_metadata["variable"]
+        variable = self.m1["variable"]
         plt.savefig(savedir+"/DelayedCorrSacrifice_%s_%s.pdf"%(evtype,variable))
         plt.show()
         plt.close()
