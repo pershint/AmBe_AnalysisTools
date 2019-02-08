@@ -42,7 +42,8 @@ class AmBeSacrificeComparer(object):
             self.analyze_range[key]['itr'] = [self.cdict[key]['itr_low'],self.cdict[key]['itr_high']]
             self.analyze_range[key]['posr'] = [self.cdict[key]['r_low'],self.cdict[key]['r_high']] 
             self.analyze_range[key]['posr3'] = [self.cdict[key]['r_low'],self.cdict[key]['r_high']] 
-            self.analyze_range[key]['nhits'] = [self.cdict[key]['nhits_low'],self.cdict[key]['nhits_high']] 
+            self.analyze_range[key]['nhits'] = [self.cdict[key]['nhits_low'],self.cdict[key]['nhits_high']]
+            self.analyze_range[key]['nhitsCleaned'] = [self.cdict[key]['nhitsCleaned_low'],self.cdict[key]['nhitsCleaned_high']] 
 
 
     def SetPromptBinNumber(self, nbins_p):
@@ -71,8 +72,13 @@ class AmBeSacrificeComparer(object):
             for entry in self.cdict_pair: #apply to both prompt and delayed
                 if self.cdict_pair[entry] is not None and entry == "interevent_dist":
                     self.precuts_data[key].append("interevent_dist<%s"%(str(self.cdict_pair[entry])))
-                if self.cdict_pair[entry] is not None and entry == "interevent_time":
+                    self.precuts_mc[key].append("interevent_dist<%s"%(str(self.cdict_pair[entry])))
+                if self.cdict_pair[entry] is not None and entry == "interevent_time_high":
                     self.precuts_data[key].append("interevent_time<%s"%(str(self.cdict_pair[entry])))
+                    self.precuts_mc[key].append("interevent_time<%s"%(str(self.cdict_pair[entry])))
+                if self.cdict_pair[entry] is not None and entry == "interevent_time_low":
+                    self.precuts_data[key].append("interevent_time>%s"%(str(self.cdict_pair[entry])))
+                    self.precuts_mc[key].append("interevent_time>%s"%(str(self.cdict_pair[entry])))
             if key == "prompt":
                 suf = "_p"
             elif key == "delayed":
@@ -101,6 +107,12 @@ class AmBeSacrificeComparer(object):
             if self.cdict[key]['nhits_low'] is not None:
                 self.precuts_data[key].append('nhits%s>%s'%(suf,str(self.cdict[key]['nhits_low'])))
                 self.precuts_mc[key].append('nhits%s>%s'%(suf,str(self.cdict[key]['nhits_low'])))
+            if self.cdict[key]['nhitsCleaned_high'] is not None:
+                self.precuts_data[key].append('nhitsCleaned%s<%s'%(suf,str(self.cdict[key]['nhitsCleaned_high'])))
+                self.precuts_mc[key].append('nhitsCleaned%s<%s'%(suf,str(self.cdict[key]['nhitsCleaned_high'])))
+            if self.cdict[key]['nhitsCleaned_low'] is not None:
+                self.precuts_data[key].append('nhitsCleaned%s>%s'%(suf,str(self.cdict[key]['nhitsCleaned_low'])))
+                self.precuts_mc[key].append('nhitsCleaned%s>%s'%(suf,str(self.cdict[key]['nhitsCleaned_low'])))
             if self.cdict[key]['udotr_high'] is not None:
                 self.precuts_data[key].append('udotr%s<%s'%(suf,str(self.cdict[key]['udotr_high'])))
                 self.precuts_mc[key].append('udotr%s<%s'%(suf,str(self.cdict[key]['udotr_high'])))
@@ -188,6 +200,8 @@ class AmBeSacrificeComparer(object):
             if var=='posr3':
                 xminimum[key] = (float(xminimum[key])/6000.0)**3
                 xmaximum[key] = (float(xmaximum[key])/6000.0)**3
+        
+        #Load the data trees from data and MC rootfiles
         data = ROOT.TChain("CombinedOutput")
         MC = ROOT.TChain("CombinedOutput") 
         for rf in self.rootfiles_data:
@@ -222,8 +236,14 @@ class AmBeSacrificeComparer(object):
             plotmask[dcmask] = "total"
             data.Draw("%s%s>>h_dallevents(%i,%f,%f)"% (var,suf,nbins,xmin,xmax),
                     "%s" % (self.precuts_data[key]),"goff")
+            print("DATA CUTSTRING: " + "%s" % (self.precuts_data[key]))
+            numdata_precuts = data.GetEntries("%s" % (self.precuts_data[key]))
+            self.sac_percut_metadata["numdataevts_precuts_%s"%(key)] = numdata_precuts
             MC.Draw("%s%s>>h_mallevents(%i,%f,%f)"% (var,suf,nbins,xmin,xmax),
                     "%s" % (self.precuts_mc[key]),"goff")
+            print("DATA CUTSTRING: " + "%s" % (self.precuts_mc[key]))
+            nummc_precuts = data.GetEntries("%s" % (self.precuts_mc[key]))
+            self.sac_percut_metadata["nummcevts_precuts_%s"%(key)] = nummc_precuts
             print("TEST: ENTRIES IN DATA AFTER PRECUTS")
             print(data.GetEntries("%s"%(self.precuts_data[key]))) 
             h_dallevents = gDirectory.Get("h_dallevents")
@@ -281,6 +301,7 @@ class AmBeSacrificeComparer(object):
         self._GetTopSacs()
         #self._DeleteEmptyBins()
         print self.sac_percut
+        return self.sac_percut, self.sac_percut_metadata
 
     def _histToDict(self,roothist):
         graphdict={}

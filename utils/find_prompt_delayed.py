@@ -19,9 +19,9 @@ parser = argparse.ArgumentParser(description='Parser to decide what analysis to 
 parser.add_argument('--debug', dest='DEBUG',action='store_true',
         help='Run in debug mode and get some extra outputs and stuff')
 parser.add_argument('--nhitpcut', dest='NPROMPT',action='store',type=int,
-        help='Cut all events as a prompt candidate above this nhit')
+        help='Cut all events as a prompt candidate above this nhitCleaned')
 parser.add_argument('--nhitdcut', dest='NDELAYED', action='store',type=int,
-        help='Cut all events as a delayed candidate below this nhit')
+        help='Cut all events as a delayed candidate below this nhitCleaned')
 parser.add_argument('--datadir', dest='DATADIR', action='store',type=str,
         help='Directory where files to analyze are stored')
 parser.add_argument('--timecut', dest='TIMETHRESH', action='store',type=float,
@@ -83,7 +83,7 @@ def deleteBuffEv(Buffer_nhits, Buffer_times, Buffer_entrynums):
 basepath = os.path.dirname(__file__)
 FilesInBunch = 1
 #######NAME OF OUTPUT FILE##########
-fileN = 'IBD_Candidates_AmBeIntMC'  #.ntuple.root is appended later
+fileN = 'IBD_Candidates_AmBeIntData_nofitValid'  #.ntuple.root is appended later
 
 #######NAME OF TREE WITH DATA########
 dattree = "output"
@@ -113,13 +113,13 @@ def loadNewEvent(evnum, tchain, buff_nhits, buff_entrynums, buff_times):
             if tchain.fitValid==1 and (float(tchain.posr) > float(RADIUSCUT)):
                     evnum+=1
                     continue
-        if tchain.nhits < min(NPROMPT,NDELAYED):
+        if tchain.nhitsCleaned < min(NPROMPT,NDELAYED):
             evnum+=1
             continue
         haveValidev = True
     if haveValidev is True:
         buff_times.append(tchain.uTSecs*1.0E9 + (tchain.uTNSecs))
-        buff_nhits.append(tchain.nhits)
+        buff_nhits.append(tchain.nhitsCleaned)
         buff_entrynums.append(evnum)
     else:
         print("WHY THE F**K ARE WE HERE")
@@ -227,8 +227,8 @@ if __name__ == '__main__':
         f_root = ROOT.TFile("%s_%i.ntuple.root"%(fileN,j),"recreate")
         
         m_root = ROOT.TTree("ProcSummary","Cuts applied and some meta information")
-        m_root.Branch('nhit_p_cut', nhit_p_cut, 'nhit_p_cut/I')
-        m_root.Branch('nhit_d_cut', nhit_d_cut, 'nhit_d_cut/I')
+        m_root.Branch('nhitCleaned_p_cut', nhit_p_cut, 'nhitCleaned_p_cut/I')
+        m_root.Branch('nhitCleaned_d_cut', nhit_d_cut, 'nhitCleaned_d_cut/I')
         m_root.Branch('allevnum', allevnum, 'allevnum/I')
         m_root.Branch('allpairnum', allpairnum, 'allpairnum/I')
         if INTERDIST is not None:
@@ -334,7 +334,7 @@ if __name__ == '__main__':
                 if Buffer_times[delayedindex] - Buffer_times[i] < TIMETHRESH:
                     #Found a pair
                     AmBeChain.GetEntry(Buffer_entrynums[i])
-                    if AmBeChain.nhits < NPROMPT:
+                    if AmBeChain.nhitsCleaned < NPROMPT:
                         continue
                     nhits_p[0]     = AmBeChain.nhits
                     fitValid_p[0]  = AmBeChain.fitValid
@@ -390,7 +390,7 @@ if __name__ == '__main__':
     
     
                     if waterFit_p[0] == 0 or waterFit_d[0] == 0:
-                        interevent_dist[0] = 0
+                        interevent_dist[0] = -1
                     else:
                         interevent_dist[0] = innerDist(posx_p[0], posy_p[0],
                             posz_p[0],posx_d[0],posy_d[0],posz_d[0])
@@ -404,8 +404,9 @@ if __name__ == '__main__':
                     t_root.Fill()
                     found_pair = True
                     pairnum+=1
-                    deleteEventsFromBuff(i,delayedindex,Buffer_nhits,
-                            Buffer_times,Buffer_entrynums)
+                    Buffer_nhits, Buffer_times, Buffer_entrynums = 
+                            deleteEventsFromBuff(i,delayedindex,Buffer_nhits,
+                                                 Buffer_times,Buffer_entrynums)
                     break
                     #now, delete the most current event if it's not above
                     #prompt threshold
