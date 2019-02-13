@@ -9,7 +9,7 @@ import os,sys
 import plots.AmBeDCSacrifice as ab
 import plots.EarlyLatePlots as el
 
-DATADIR = "./rootfiles/fitValid"
+DATADIR = "./rootfiles/all"
 PCONFIGFILE = "./config/config_prompt_default.json"
 DCONFIGFILE = "./config/config_delayed_default.json"
 EARLYCONFIGFILE = "./config/early_pair_config.json"
@@ -48,6 +48,13 @@ if __name__=='__main__':
     EarlySacAnalyze.ShowSacrificePlot(evtype='delayed',dattype='data',fittotal=True)
     LateSacAnalyze.ShowSacrificePlot(evtype='delayed',dattype='data',fittotal=True)
 
-    #Let's try the new tool
-    elplotter = el.EarlyLateSacComparer(earlysacs, latesacs, earlymeta, latemeta)
-    elplotter.PlotDataSacTotalDifference(fitdiff=True,title=None,evtype='delayed')
+    #Let's try the new tool; this is a general sacrifice comparer that can
+    #compare two data cleaning sacrifice dataframes
+    elplotter = el.SacComparer(earlysacs, latesacs, earlymeta, latemeta)
+    elplotter.PlotSacrifices(fitdiff=True,title=None,dattype='data', 
+                             evtype='delayed',label1=r"interevent_time<500 $\mu$s",
+                             label2=r"interevent_time>500 $\mu$s")
+    elplotter.PlotSacrifices(fitdiff=True,title=None,dattype='data',
+                             evtype='prompt',label1=r"interevent_time<500 $\mu$s",
+                             label2=r"interevent_time>500 $\mu$s")
+    elplotter.PlotDataSacWeightedDifference(fitdiff=True,title=None,evtype='delayed')

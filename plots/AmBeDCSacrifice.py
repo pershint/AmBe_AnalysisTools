@@ -149,9 +149,10 @@ class AmBeSacrificeComparer(object):
                     self.cdict[key]["sacpath_DCmask"]))
                 self.precuts_mc[key].append("((dcFlagged%s&%s)==%s)" % (suf,self.cdict[key]["sacpath_DCmask"],\
                     self.cdict[key]["sacpath_DCmask"]))
-            
             if self.cdict[key]["path_trigmask"] is not None:
-                self.precuts_data[key].append("((triggerWord_p&%s)==0)" % (suf,self.cdict[key]["path_trigmask"]))
+                self.precuts_data[key].append("((triggerWord%s&%s)==0)" % (suf,self.cdict[key]["path_trigmask"]))
+            if self.cdict[key]["path_trigmask_not_exact"] is not None:
+                self.precuts_data[key].append("(triggerWord%s!=%s)" % (suf,self.cdict[key]["path_trigmask_not_exact"]))
             self.precuts_data[key] = self._cutfuse(self.precuts_data[key], "&&")
             self.precuts_mc[key] = self._cutfuse(self.precuts_mc[key], "&&")
 

@@ -36,9 +36,9 @@ parser.add_argument('--posrcut', dest='RADIUSCUT', action='store',
         help='Only consider IBD candidates with an interevent distance <= input.'+\
                 'Will include events with no fitValid, but cut those with' +\
                 'fitValid and failing the cut')
-parser.set_defaults(DEBUG=False,NPROMPT=16, NDELAYED=6, TIMETHRESH=5.0E6, 
+parser.set_defaults(DEBUG=False,NPROMPT=15, NDELAYED=4, TIMETHRESH=1.0E7, 
         INTERDIST=None, RADIUSCUT=None, FITVALID=False,
-        DATADIR= "/home/onetrueteal/share/AmBe/AmBe_Control")
+        DATADIR= "/home/onetrueteal/share_wd/SNOPlus/AmBe_Final/Int_Data/subtuple/All/")
 args = parser.parse_args()
 
 DEBUG = args.DEBUG
@@ -404,7 +404,7 @@ if __name__ == '__main__':
                     t_root.Fill()
                     found_pair = True
                     pairnum+=1
-                    Buffer_nhits, Buffer_times, Buffer_entrynums = 
+                    Buffer_nhits, Buffer_times, Buffer_entrynums = \
                             deleteEventsFromBuff(i,delayedindex,Buffer_nhits,
                                                  Buffer_times,Buffer_entrynums)
                     break
