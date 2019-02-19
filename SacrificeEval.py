@@ -5,9 +5,15 @@
 import json
 import glob
 import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
 import os,sys
 import plots.AmBeDCSacrifice as ab
 import plots.EarlyLatePlots as el
+import plots.SimpleFitter as sf
+
+sns.set_style("darkgrid")
+sns.set_context("poster")
 
 DATADIR = "./rootfiles/all"
 PCONFIGFILE = "./config/config_prompt_default.json"
@@ -38,20 +44,40 @@ if __name__=='__main__':
     #Now, start up the sacrifice analyzer
     SacAnalyzer = ab.AmBeSacrificeComparer(datafiles,mcfiles,pconfig,dconfig,bconfig)
     #Set the number of bins we want when plotting/analyzing
-    SacAnalyzer.SetPromptBinNumber(14)
-    SacAnalyzer.SetDelayedBinNumber(1)
-    #Now, analyze the sacrifice per bin.  Start with nhits as the variable
-    #accepts nhits, energy, udotr, or posr3 for nice plotting right now
-    defaultdat, defaultmeta = SacAnalyzer.AnalyzeData(var='nhitsCleaned')
-    #Now, lets try to plot out the prompt event's sacrifice for the variable analyze
-    #We will make the plot for the MC files' prompt events
-    SacAnalyzer.ShowSacrificePlot(evtype='prompt',dattype='data',fittotal=True)
-    SacAnalyzer.ShowSacrificePlot(evtype='prompt',dattype='MC',fittotal=True)
-    SacAnalyzer.ShowSacrificePlot(evtype='delayed',dattype='data',fittotal=True)
-    SacAnalyzer.ShowSacrificePlot(evtype='delayed',dattype='MC',fittotal=False)
-    #Lets do a data/MC comparison as well for the delayed events
-    SacAnalyzer.DataMCSacCompare(evtype="prompt")
-    #And let's look at the Data/MC sacrifice ratio
-    SacAnalyzer.PlotDataMCSacRatio(evtype='prompt',fittotal=False)
-    SacAnalyzer.PlotDataMCAccRatio(evtype='prompt',fittotal=False)
-    SacAnalyzer.PlotDataMCAccRatio(evtype='delayed',fittotal=False)
+    #SacAnalyzer.SetPromptBinNumber(14)
+    #SacAnalyzer.SetDelayedBinNumber(1)
+    ##Now, analyze the sacrifice per bin.  Start with nhits as the variable
+    ##accepts nhits, energy, udotr, or posr3 for nice plotting right now
+    #defaultdat, defaultmeta = SacAnalyzer.AnalyzeData(var='nhitsCleaned')
+    ##Now, lets try to plot out the prompt event's sacrifice for the variable analyze
+    ##We will make the plot for the MC files' prompt events
+    #SacAnalyzer.ShowSacrificePlot(evtype='prompt',dattype='data',fittotal=True)
+    #SacAnalyzer.ShowSacrificePlot(evtype='prompt',dattype='MC',fittotal=True)
+    #SacAnalyzer.ShowSacrificePlot(evtype='delayed',dattype='data',fittotal=True)
+    #SacAnalyzer.ShowSacrificePlot(evtype='delayed',dattype='MC',fittotal=False)
+    ##Lets do a data/MC comparison as well for the delayed events
+    #SacAnalyzer.DataMCSacCompare(evtype="prompt")
+    ##And let's look at the Data/MC sacrifice ratio
+    #SacAnalyzer.PlotDataMCSacRatio(evtype='prompt',fittotal=False)
+    #SacAnalyzer.PlotDataMCAccRatio(evtype='prompt',fittotal=False)
+    #SacAnalyzer.PlotDataMCAccRatio(evtype='delayed',fittotal=False)
+    #Get a histogram of the clean distribution for the input variable
+    IThist,histMeta = SacAnalyzer.DrawCleanHist(evtype="pair",var='interevent_time',
+                                                dattype="data",xmin=3000,
+                                                xmax=500000.,nbins=50,
+                                                addlROOTcuts="interevent_time>3000")
+    #Neat.  Now, let's fit to this and plot it
+    doubleexp = lambda x,A1,l1,A2,l2: A1*np.exp(-l1*x) + A2*np.exp(-l2*x)
+    myfitter = sf.Fitter(datax=IThist["x"],datay=IThist["y"],
+                      datasigma=IThist["y_unc"])
+    myfitter.SetFitFunction(doubleexp, 4)
+    initvars = [2.E4, 1./20000., 1.E3,1./2.E7]
+    popt, pcov = myfitter.RunFit(initvars)
+    plt.errorbar(x=IThist["x"],y=IThist["y"],yerr=IThist["y_unc"],
+                 linestyle='none',marker='o',markersize=5)
+    bestfitline = doubleexp(IThist["x"],popt[0],popt[1],popt[2],popt[3])
+    plt.plot(IThist["x"],bestfitline)
+    plt.xlabel("Interevent Time (ns)")
+    plt.ylabel("Events")
+    plt.title("Data cleaned interevent time distribution of AmBe data")
+    plt.show()

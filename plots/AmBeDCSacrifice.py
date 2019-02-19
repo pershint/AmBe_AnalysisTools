@@ -180,7 +180,8 @@ class AmBeSacrificeComparer(object):
                 sortednames = [x for _,x in sorted(zip(sacrifices,names))]
                 topnames = sortednames[(len(sortednames)-(topnumber+1)):len(sortednames)]
                 self.top_cuts[key][dattype] = topnames
-    
+
+
     def AnalyzeData(self, var="nhits"):
         self.sac_percut_metadata = {}
         '''Analyzes the DC sacrifice for the data and Monte Carlo data fed to
@@ -303,6 +304,76 @@ class AmBeSacrificeComparer(object):
         #self._DeleteEmptyBins()
         print self.sac_percut
         return self.sac_percut, self.sac_percut_metadata
+
+    def DrawCleanHist(self, evtype="pair",dattype="data",var="interevent_time",xmin=0., xmax=5.E5,nbins=100,addlROOTcuts=""):
+        histMeta = {"var":var, "evtype":evtype, "datatype":dattype, "xrange":[xmin,xmax],"nbins":nbins}
+        
+        #Load the data trees from data and MC rootfiles
+        data = ROOT.TChain("CombinedOutput")
+        MC = ROOT.TChain("CombinedOutput") 
+        for rf in self.rootfiles_data:
+            data.Add(rf)
+        for mf in self.rootfiles_mc:
+            MC.Add(mf)
+        if evtype=="prompt":
+            suf = "_p"
+        elif evtype=="delayed":
+            suf = "_d"
+        else:
+            suf = ""
+        dcmask_prompt = self.cdict["prompt"]['sacDCmask']
+        dcmask_delayed = self.cdict["delayed"]['sacDCmask']
+        fullmask = mb.get_dcwords()
+        print(fullmask)
+        plotmask = {}
+        plotmask[dcmask_prompt] = "_p"
+        plotmask[dcmask_delayed] = "_d"
+        precuts_data = self.precuts_data["prompt"] + "&&" + self.precuts_data["delayed"]
+        precuts_mc = self.precuts_mc["prompt"] + "&&" + self.precuts_mc["delayed"]
+        dcstring = ""
+        for cut in plotmask:
+            dcstring+="&&((dcFlagged%s&%i)!=%i)" % (plotmask[cut],cut,cut)
+
+        #h_CleanDistHist = ROOT.TH1D("h_CleanDistHist", "h_CleanDistHist", nbins,xmin,xmax)
+        #h_CleanDistHist.Sumw2()
+        if dattype=="data":
+            if addlROOTcuts:
+                data.Draw("%s%s>>h_CleanDistHist(%i,%f,%f)" % (var,suf,nbins,xmin,xmax),
+                          "%s%s&&%s"%(precuts_data,dcstring,addlROOTcuts),"goff")
+            else:
+                data.Draw("%s%s>>h_CleanDistHist(%i,%f,%f)" % (var,suf,nbins,xmin,xmax),
+                          "%s%s"%(precuts_data,dcstring),"goff")
+            print("CUTS USED: %s%s&&%s"%(precuts_data,dcstring,addlROOTcuts))
+        elif dattype=="MC":
+            if addlROOTcuts:
+                mc.Draw("%s%s>>h_CleanDistHist(%i,%f,%f)" % (var,suf,nbins,xmin,xmax),
+                        "%s%s&&%s"%(precuts_mc,dcstring,addlROOTcuts),"goff")
+            else:
+                mc.Draw("%s%s>>h_CleanDistHist(%i,%f,%f)" % (var,suf,nbins,xmin,xmax),
+                        "%s%s"%(precuts_mc,dcstring),"goff")
+            print("CUTS USED: %s%s&&%s"%(precuts_mc,dcstring,addlROOTcuts))
+
+        h_CleanDistHist = gDirectory.Get("h_CleanDistHist")
+        h_CleanDistHist.Sumw2()
+        histdict = self._histToDictXY(h_CleanDistHist)
+        histPD= pandas.DataFrame(data=histdict)
+        del h_CleanDistHist
+        #graphdict has the sacrifice information for each cut. Now, let's plot it.
+        return histPD, histMeta
+
+    def _histToDictXY(self,roothist):
+        graphdict={}
+        x, y,y_unc =(), (), () #pandas wants ntuples
+        for i in xrange(int(roothist.GetNbinsX()+1)):
+            if i==0:
+                continue
+            x =  x + ((float(roothist.GetBinWidth(i))/2.0) + float(roothist.GetBinLowEdge(i)),)
+            y = y + (roothist.GetBinContent(i),)
+            y_unc = y_unc + (roothist.GetBinError(i),)
+        graphdict["x"] = x
+        graphdict["y"] = y
+        graphdict["y_unc"] = y_unc
+        return graphdict
 
     def _histToDict(self,roothist):
         graphdict={}
