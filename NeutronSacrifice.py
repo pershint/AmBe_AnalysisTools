@@ -19,10 +19,10 @@ sns.set_context("poster")
 DATADIR = "./rootfiles/all"
 PCONFIGFILE = "./config/config_prompt_default.json"
 DCONFIGFILE = "./config/config_delayed_default.json"
-BOTHCONFIGFILE = "./config/early_pair_config.json"
+BOTHCONFIGFILE = "./config/full_pair_config.json"
 
-PSYSCONFIGFILE = "./config/nhit_systematic/config_prompt_default.json"
-DSYSCONFIGFILE = "./config/nhit_systematic/config_delayed_default.json"
+EARLYCONFIGFILE = "./config/early_pair_config.json"
+LATECONFIGFILE = "./config/late_pair_config.json"
 
 def GetRanges(dataframe):
     ranges = []
@@ -41,33 +41,42 @@ if __name__=='__main__':
         dconfig = json.load(f)
     with open(BOTHCONFIGFILE,"r") as f:
         bconfig = json.load(f)
-    
-    #Different configuration that can be compared to default for systematic evaluation
-    with open(PSYSCONFIGFILE,"r") as f:
-        psysconfig = json.load(f)
-    with open(DSYSCONFIGFILE,"r") as f:
-        dsysconfig = json.load(f)
+    with open(EARLYCONFIGFILE,"r") as f:
+        econfig = json.load(f)
+    with open(LATECONFIGFILE,"r") as f:
+        lconfig = json.load(f)
     
     #First, get the rootfile names for all data and MC
     datafiles = glob.glob("%s/data/*.root"%(DATADIR))
     mcfiles = glob.glob("%s/mc/*.root"%(DATADIR))
     #Now, start up the sacrifice analyzer
-    SacAnalyzer = ab.AmBeSacrificeComparer(datafiles,mcfiles,pconfig,dconfig,bconfig)
+    EarlySacAnalyze = ab.AmBeSacrificeComparer(datafiles,mcfiles,pconfig,dconfig,econfig)
+    LateSacAnalyze = ab.AmBeSacrificeComparer(datafiles,mcfiles,pconfig,dconfig,lconfig)
     #Set the number of bins we want when plotting/analyzing
-    SacAnalyzer.SetPromptBinNumber(14)
-    SacAnalyzer.SetDelayedBinNumber(5)
+    EarlySacAnalyze.SetPromptBinNumber(6)
+    EarlySacAnalyze.SetDelayedBinNumber(6)
+    LateSacAnalyze.SetPromptBinNumber(6)
+    LateSacAnalyze.SetDelayedBinNumber(6)
+    #Now, analyze the sacrifice per bin.  Start with nhits as the variable
+    #accepts nhits, energy, udotr, or posr3 for nice plotting right now
+    earlysacs, earlymeta = EarlySacAnalyze.AnalyzeData(var='nhitsCleaned')
+    latesacs, latemeta = LateSacAnalyze.AnalyzeData(var='nhitsCleaned')
+
+    SacAnalyzer = ab.AmBeSacrificeComparer(datafiles,mcfiles,pconfig,dconfig,bconfig)
     #Now, analyze the sacrifice per bin.  Start with nhits as the variable
     #accepts nhits, energy, udotr, or posr3 for nice plotting right now
     ##defaultdat, defaultmeta = SacAnalyzer.AnalyzeData(var='nhitsCleaned')
     ##nhitranges = GetRanges(defaultdat) #FIXME: check values in vardat are RHS of bins
     nhitranges=[[4,8],[8,12]]
     for i in xrange(len(nhitranges)):
+        earliest_time = econfig["interevent_time_low"]
+        latest_time = lconfig["interevent_time_high"]
         lownhit = str(nhitranges[i][0])
         highnhit = str(nhitranges[i][1])
         IThist,histMeta = SacAnalyzer.DrawCleanHist(evtype="pair",var='interevent_time',
-                                                    dattype="data",xmin=3000,
-                                                    xmax=999000.,nbins=50,
-                                                    addlROOTcuts="interevent_time>3000&&nhitsCleaned_d>%s&&nhitsCleaned_d<%s"%(lownhit,highnhit))
+                                                    dattype="data",xmin=earliest_time,
+                                                    xmax=latest_time,nbins=50,
+                                                    addlROOTcuts="nhitsCleaned_d>%s&&nhitsCleaned_d<%s"%(lownhit,highnhit))
         #Neat.  Now, let's fit to this and plot it
         doubleexp = lambda x,A1,l1,A2,l2: A1*np.exp(-l1*x) + A2*np.exp(-l2*x)
         singleexp = lambda x,A,l: A*np.exp(-l*x)
@@ -89,3 +98,11 @@ if __name__=='__main__':
         plt.title("Data cleaned interevent time distribution of AmBe data")
         plt.show()
         #Neato.  Now, load these into the data cleaning sacrifice class
+        earlywindow = [econfig["interevent_time_low"],
+                       econfig["interevent_time_high"]]
+        latewindow = [lconfig["interevent_time_low"],
+                      lconfig["interevent_time_high"]]
+        esac = earlysacs["delayed"]["data"]["total"].fractional_sacrifice[i]
+        lsac = latesacs["delayed"]["data"]["total"].fractional_sacrifice[i]
+        NSCalc = nsc.NeutronSacrificeCalculator(IThist["x"],corry, uncorry,
+                earlywindow, latewindow, esac, lsac) 
