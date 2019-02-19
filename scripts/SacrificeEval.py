@@ -8,9 +8,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import os,sys
-import plots.AmBeDCSacrifice as ab
-import plots.EarlyLatePlots as el
-import plots.SimpleFitter as sf
+import lib.AmBeDCSacrifice as ab
+import lib.EarlyLatePlots as el
+import lib.SimpleFitter as sf
 
 sns.set_style("darkgrid")
 sns.set_context("poster")
@@ -64,14 +64,14 @@ if __name__=='__main__':
     #Get a histogram of the clean distribution for the input variable
     IThist,histMeta = SacAnalyzer.DrawCleanHist(evtype="pair",var='interevent_time',
                                                 dattype="data",xmin=3000,
-                                                xmax=500000.,nbins=50,
-                                                addlROOTcuts="interevent_time>3000")
+                                                xmax=999000.,nbins=50,
+                                                addlROOTcuts="interevent_time>3000&&nhitsCleaned_d==14")
     #Neat.  Now, let's fit to this and plot it
     doubleexp = lambda x,A1,l1,A2,l2: A1*np.exp(-l1*x) + A2*np.exp(-l2*x)
     myfitter = sf.Fitter(datax=IThist["x"],datay=IThist["y"],
                       datasigma=IThist["y_unc"])
     myfitter.SetFitFunction(doubleexp, 4)
-    initvars = [2.E4, 1./20000., 1.E3,1./2.E7]
+    initvars = [200., 1./20000., 15.,1./2.E7]
     popt, pcov = myfitter.RunFit(initvars)
     plt.errorbar(x=IThist["x"],y=IThist["y"],yerr=IThist["y_unc"],
                  linestyle='none',marker='o',markersize=5)

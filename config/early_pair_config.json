@@ -2,5 +2,5 @@
     "comments": "AmBe event selection cuts applied to both events for DC Sacrifice study", 
     "interevent_dist": null,
     "interevent_time_low": 0,
-    "interevent_time_high": 500000
+    "interevent_time_high": 1000000
 }

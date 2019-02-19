@@ -6,8 +6,8 @@ import json
 import glob
 import numpy as np
 import os,sys
-import plots.AmBeDCSacrifice as ab
-import plots.EarlyLatePlots as el
+import lib.AmBeDCSacrifice as ab
+import lib.EarlyLatePlots as el
 
 DATADIR = "./rootfiles/all"
 PCONFIGFILE = "./config/config_prompt_default.json"
