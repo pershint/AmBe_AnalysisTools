@@ -182,7 +182,7 @@ class AmBeSacrificeComparer(object):
                 self.top_cuts[key][dattype] = topnames
 
 
-    def AnalyzeData(self, var="nhits"):
+    def AnalyzeData(self, var="nhits",onlycuts=[]):
         self.sac_percut_metadata = {}
         '''Analyzes the DC sacrifice for the data and Monte Carlo data fed to
         the class.  Returns the sacrifice as a function of the variable given'''
@@ -227,6 +227,8 @@ class AmBeSacrificeComparer(object):
             print(fullmask)
             plotmask = {}
             for cut in fullmask:
+                if cut not in onlycuts and len(onlycuts)>0:
+                    continue
                 if 'prescale' in fullmask[cut]:
                     continue
                 if 'waterblind' in fullmask[cut]:
@@ -235,7 +237,8 @@ class AmBeSacrificeComparer(object):
                     print("WE ARE ADDING IN CUT: " + str(cut))
                     print("THAT IS... CUT: " + str(fullmask[cut]))
                     plotmask[cut] = fullmask[cut]
-            plotmask[dcmask] = "total"
+            if "total" in onlycuts and len(onlycuts) > 0:
+                plotmask[dcmask] = "total"
             data.Draw("%s%s>>h_dallevents(%i,%f,%f)"% (var,suf,nbins,xmin,xmax),
                     "%s" % (self.precuts_data[key]),"goff")
             print("DATA CUTSTRING: " + "%s" % (self.precuts_data[key]))
@@ -326,13 +329,14 @@ class AmBeSacrificeComparer(object):
         fullmask = mb.get_dcwords()
         print(fullmask)
         plotmask = {}
-        plotmask[dcmask_prompt] = "_p"
-        plotmask[dcmask_delayed] = "_d"
+        plotmask["_p"] = dcmask_prompt
+        plotmask["_d"] = dcmask_delayed 
+        print("THEPLOTMASK: " + str(plotmask))
         precuts_data = self.precuts_data["prompt"] + "&&" + self.precuts_data["delayed"]
         precuts_mc = self.precuts_mc["prompt"] + "&&" + self.precuts_mc["delayed"]
         dcstring = ""
         for cut in plotmask:
-            dcstring+="&&((dcFlagged%s&%i)!=%i)" % (plotmask[cut],cut,cut)
+            dcstring+="&&((dcFlagged%s&%i)==%i)" % (cut, plotmask[cut],plotmask[cut])
 
         #h_CleanDistHist = ROOT.TH1D("h_CleanDistHist", "h_CleanDistHist", nbins,xmin,xmax)
         #h_CleanDistHist.Sumw2()
