@@ -57,4 +57,3 @@ if __name__=='__main__':
     elplotter.PlotSacrifices(fitdiff=True,title=None,dattype='data',
                              evtype='prompt',label1=r"interevent_time<500 $\mu$s",
                              label2=r"interevent_time>500 $\mu$s")
-    elplotter.PlotDataSacWeightedDifference(fitdiff=True,title=None,evtype='delayed')
