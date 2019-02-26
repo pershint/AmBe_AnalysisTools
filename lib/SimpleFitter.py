@@ -47,7 +47,8 @@ class Fitter(object):
         if self.datasigma is None:
             popt, pcov = scp.curve_fit(self.f,self.datax, self.datay, p0=initialvars)
         else:
-            popt, pcov = scp.curve_fit(self.f,self.datax, self.datay, p0=initialvars,sigma=self.datasigma)
+            popt, pcov = scp.curve_fit(self.f,self.datax, self.datay, p0=initialvars,
+                    sigma=self.datasigma)
         print("POPT: " + str(popt))
         print("PCOV: " + str(pcov))
         return popt, pcov

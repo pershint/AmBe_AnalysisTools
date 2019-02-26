@@ -16,16 +16,14 @@ class NSacCalculator(object):
     fitfunc : function that will be fit to the data.
     '''
     def __init__(self,ithist_x,itcorr_y,ituncorr_y,itearlywindow,itlatewindow,
-                 earlysac, earlysac_unc, latesac,latesac_unc):
+                 earlysac, latesac):
         self.itx = ithist_x
         self.corry = itcorr_y
         self.uncorry = ituncorr_y
         self.it_ewin = itearlywindow
         self.it_lwin = itlatewindow
         self.es = earlysac
-        self.es_unc = earlysac_unc
         self.ls = latesac
-        self.ls_unc = latesac_unc
 
     def _SumInWindow(self,x,y,xmin,xmax):
         sumind = np.where(x<xmax)[0]
