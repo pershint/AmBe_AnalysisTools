@@ -56,9 +56,9 @@ if __name__=='__main__':
     EarlySacAnalyze = ab.AmBeSacrificeComparer(datafiles,mcfiles,pconfig,dconfig,econfig)
     LateSacAnalyze = ab.AmBeSacrificeComparer(datafiles,mcfiles,pconfig,dconfig,lconfig)
     #Set the number of bins we want when plotting/analyzing
-    EarlySacAnalyze.SetPromptBinNumber(11)
+    EarlySacAnalyze.SetPromptBinNumber(28)
     EarlySacAnalyze.SetDelayedBinNumber(11)
-    LateSacAnalyze.SetPromptBinNumber(11)
+    LateSacAnalyze.SetPromptBinNumber(28)
     LateSacAnalyze.SetDelayedBinNumber(11)
     #Now, analyze the sacrifice per bin.  Start with nhits as the variable
     #accepts nhits, energy, udotr, or posr3 for nice plotting right now
@@ -68,7 +68,7 @@ if __name__=='__main__':
                                                     onlycuts=['total'])
 
     SacAnalyzer = ab.AmBeSacrificeComparer(datafiles,mcfiles,pconfig,dconfig,bconfig)
-    SacAnalyzer.SetPromptBinNumber(11)
+    SacAnalyzer.SetPromptBinNumber(28)
     SacAnalyzer.SetDelayedBinNumber(11)
     #Now, analyze the sacrifice per bin.  Start with nhits as the variable
     #accepts nhits, energy, udotr, or posr3 for nice plotting right now
