@@ -239,6 +239,8 @@ class AmBeSacrificeComparer(object):
                     plotmask[cut] = fullmask[cut]
             if "total" in onlycuts and len(onlycuts) > 0:
                 plotmask[dcmask] = "total"
+            elif len(onlycuts)==0:
+                plotmask[dcmask] = "total"
             data.Draw("%s%s>>h_dallevents(%i,%f,%f)"% (var,suf,nbins,xmin,xmax),
                     "%s" % (self.precuts_data[key]),"goff")
             print("DATA CUTSTRING: " + "%s" % (self.precuts_data[key]))

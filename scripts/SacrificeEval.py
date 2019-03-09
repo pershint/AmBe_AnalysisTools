@@ -16,8 +16,8 @@ sns.set_style("darkgrid")
 sns.set_context("poster")
 
 DATADIR = "./rootfiles/all"
-PCONFIGFILE = "./config/config_prompt_default.json"
-DCONFIGFILE = "./config/config_delayed_default.json"
+PCONFIGFILE = "./config/config_prompt_fullmask.json"
+DCONFIGFILE = "./config/config_delayed_fullmask.json"
 BOTHCONFIGFILE = "./config/early_pair_config.json"
 
 PSYSCONFIGFILE = "./config/nhit_systematic/config_prompt_default.json"
@@ -44,23 +44,23 @@ if __name__=='__main__':
     #Now, start up the sacrifice analyzer
     SacAnalyzer = ab.AmBeSacrificeComparer(datafiles,mcfiles,pconfig,dconfig,bconfig)
     #Set the number of bins we want when plotting/analyzing
-    #SacAnalyzer.SetPromptBinNumber(14)
-    #SacAnalyzer.SetDelayedBinNumber(1)
-    ##Now, analyze the sacrifice per bin.  Start with nhits as the variable
-    ##accepts nhits, energy, udotr, or posr3 for nice plotting right now
-    #defaultdat, defaultmeta = SacAnalyzer.AnalyzeData(var='nhitsCleaned')
-    ##Now, lets try to plot out the prompt event's sacrifice for the variable analyze
-    ##We will make the plot for the MC files' prompt events
-    #SacAnalyzer.ShowSacrificePlot(evtype='prompt',dattype='data',fittotal=True)
-    #SacAnalyzer.ShowSacrificePlot(evtype='prompt',dattype='MC',fittotal=True)
-    #SacAnalyzer.ShowSacrificePlot(evtype='delayed',dattype='data',fittotal=True)
-    #SacAnalyzer.ShowSacrificePlot(evtype='delayed',dattype='MC',fittotal=False)
-    ##Lets do a data/MC comparison as well for the delayed events
-    #SacAnalyzer.DataMCSacCompare(evtype="prompt")
-    ##And let's look at the Data/MC sacrifice ratio
-    #SacAnalyzer.PlotDataMCSacRatio(evtype='prompt',fittotal=False)
-    #SacAnalyzer.PlotDataMCAccRatio(evtype='prompt',fittotal=False)
-    #SacAnalyzer.PlotDataMCAccRatio(evtype='delayed',fittotal=False)
+    SacAnalyzer.SetPromptBinNumber(28)
+    SacAnalyzer.SetDelayedBinNumber(11)
+    #Now, analyze the sacrifice per bin.  Start with nhits as the variable
+    #accepts nhits, energy, udotr, or posr3 for nice plotting right now
+    defaultdat, defaultmeta = SacAnalyzer.AnalyzeData(var='nhitsCleaned')
+    #Now, lets try to plot out the prompt event's sacrifice for the variable analyze
+    #We will make the plot for the MC files' prompt events
+    SacAnalyzer.ShowSacrificePlot(evtype='prompt',dattype='data',fittotal=True)
+    SacAnalyzer.ShowSacrificePlot(evtype='prompt',dattype='MC',fittotal=False)
+    SacAnalyzer.ShowSacrificePlot(evtype='delayed',dattype='data',fittotal=False)
+    SacAnalyzer.ShowSacrificePlot(evtype='delayed',dattype='MC',fittotal=False)
+    #Lets do a data/MC comparison as well for the delayed events
+    SacAnalyzer.DataMCSacCompare(evtype="prompt")
+    #And let's look at the Data/MC sacrifice ratio
+    SacAnalyzer.PlotDataMCSacRatio(evtype='prompt',fittotal=False)
+    SacAnalyzer.PlotDataMCAccRatio(evtype='prompt',fittotal=False)
+    SacAnalyzer.PlotDataMCAccRatio(evtype='delayed',fittotal=False)
     #Get a histogram of the clean distribution for the input variable
     IThist,histMeta = SacAnalyzer.DrawCleanHist(evtype="pair",var='interevent_time',
                                                 dattype="data",xmin=3000,

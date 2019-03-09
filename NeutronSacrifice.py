@@ -20,8 +20,8 @@ sns.set_style("darkgrid")
 sns.set_context("poster")
 
 DATADIR = "./rootfiles/all"
-PCONFIGFILE = "./config/config_prompt_default.json"
-DCONFIGFILE = "./config/config_delayed_default.json"
+PCONFIGFILE = "./config/config_prompt_fullmask.json"
+DCONFIGFILE = "./config/config_delayed_fullmask.json"
 BOTHCONFIGFILE = "./config/full_pair_config.json"
 
 EARLYCONFIGFILE = "./config/early_pair_config.json"
@@ -98,13 +98,15 @@ if __name__=='__main__':
                                                     xmax=latest_time,nbins=100,
                                                     addlROOTcuts="nhitsCleaned_d>=%i&&nhitsCleaned_d<%i"%(int(lownhit),int(highnhit)))
         #Neat.  Now, let's fit to this and plot it
-        doubleexp = lambda x,A1,l1,A2,l2: A1*np.exp(-(l1+l2)*x) + A2*np.exp(-l2*x)
+        #doubleexp = lambda x,A1,l1,A2: A1*np.exp(-(l1)*x) + A2
+        doubleexp = lambda x,A1,l1,A2,l2: A1*np.exp(-(l1)*x) + A2*np.exp(-(l2)*x) 
+
         varlabels = ["A1","l1","A2","l2"]
         singleexp = lambda x,A,l: A*np.exp(-l*x)
         myfitter = sf.Fitter(datax=IThist["x"],datay=IThist["y"],
                           datasigma=IThist["y_unc"])
-        myfitter.SetFitFunction(doubleexp, 4)
-        initvars = [2000., 1./20000., 15.,1./2.E8]
+        initvars = [2000., 1./20000., 100., 1E-7]
+        myfitter.SetFitFunction(doubleexp, len(initvars))
         popt, pcov = myfitter.RunFit(initvars)
         try:
             if pcov == np.inf:
@@ -128,19 +130,19 @@ if __name__=='__main__':
         chartime_unc = (1./(charlamb**2))*charlamb_unc
         chartimes.append(chartime)
         chartime_uncs.append(chartime_unc)
-        #plt.errorbar(x=IThist["x"],y=IThist["y"],yerr=IThist["y_unc"],
-        #             linestyle='none',marker='o',markersize=5)
+        plt.errorbar(x=IThist["x"],y=IThist["y"],yerr=IThist["y_unc"],
+                     linestyle='none',marker='o',markersize=5)
         bestfitline = doubleexp(IThist["x"],popt[0],popt[1],popt[2],popt[3])
         corry = singleexp(IThist["x"],popt[0],popt[1])
         uncorry = singleexp(IThist["x"],popt[2],popt[3])
-        #plt.plot(IThist["x"],bestfitline,label="best fit")
-        #plt.plot(IThist["x"],corry,label="Neutron capture fit")
-        #plt.plot(IThist["x"],uncorry,label="Backgrounds fit")
-        #plt.legend()
-        #plt.xlabel("Interevent Time (ns)")
-        #plt.ylabel("Events")
-        #plt.title("Data cleaned interevent time distribution of AmBe data \n" + \
-        #          "delayed nhitsCleaned range: [%i,%i)"%(lownhit,highnhit))
+        plt.plot(IThist["x"],bestfitline,label="best fit")
+        plt.plot(IThist["x"],corry,label="Neutron capture fit")
+        plt.plot(IThist["x"],uncorry,label="Backgrounds fit")
+        plt.legend()
+        plt.xlabel("Interevent Time (ns)")
+        plt.ylabel("Events")
+        plt.title("Data cleaned interevent time distribution of AmBe data \n" + \
+                  "delayed nhitsCleaned range: [%i,%i)"%(lownhit,highnhit))
         #plt.show()
         #Neato.  Now, load these into the data cleaning sacrifice class
         earlywindow = [econfig["interevent_time_low"],
@@ -161,8 +163,8 @@ if __name__=='__main__':
             thislsac = pd.RandShoot(lsac,lsac_unc,1)
             corry = singleexp(IThist["x"],popt[0]+var_shots[i][0],
                               popt[1]+var_shots[i][1])
-            uncorry = singleexp(IThist["x"],popt[2]+var_shots[i][2],
-                                popt[3]+var_shots[i][3])
+            uncorry = np.ones(len(IThist["x"])) * \
+                      ((popt[2]+var_shots[i][2]))
             NSCalc = nsc.NSacCalculator(IThist["x"],corry, uncorry, earlywindow,
                                         latewindow, thisesac, thislsac)
             NSac = NSCalc.CalculateNeutronSacrifice()
@@ -212,7 +214,7 @@ if __name__=='__main__':
     #          "calculated neutron DC sacrifice, AmBe internal data")
     plt.title("Comparison of prompt candidate DC sacrifice to \n "+\
               "calculated neutron DC sacrifice, AmBe internal data")
-    plt.show()
+    #plt.show()
     
     #Make the plot showing how the fitted correlated time varies
     plt.errorbar(x=thevardat, y=chartimes, xerr=binwidth/2.,
@@ -222,6 +224,27 @@ if __name__=='__main__':
     plt.ylabel("Fitted neutron capture time (ns)")
     plt.title("Variation in fitted neutron capture time across delayed \n" +\
             "nhitsCleaned values")
-    plt.show()
-
+    #plt.show()
+    #plt.errorbar(x=thevardat, y=esacs, xerr=binwidth/2.,
+    #             yerr=esac_uncs,linestyle='none',marker='o',markersize=7,
+    #             label='early window delayed sacrifice')
+    n_results = {}
+    n_results['sacrifice'] = list(neutronsacs)
+    n_results['sacrifice_uncertainty'] = list(neutronsac_uncs)
+    thevardat = np.array(thevardat)-0.5
+    n_results['nhitsCleaned'] = list(thevardat)
+    with open("neutron_sacrifice.json","w") as f:
+        json.dump(n_results,f,sort_keys=True,indent=4)
+    d_results = {}
+    d_results['nhitsCleaned'] = list(thevardat)
+    n_results['sacrifice'] = list(esacs)
+    n_results['sacrifice_uncertainty'] = list(esac_uncs)
+    with open("delayed_sacrifice.json","w") as f:
+        json.dump(n_results,f,sort_keys=True,indent=4)
+    p_results = {}
+    p_results['sacrifice'] = list(prompt_fs)
+    p_results['sacrifice_uncertainty'] = list(prompt_fsunc)
+    p_results['nhitsCleaned'] = list(prompt_vardat)
+    with open("prompt_sacrifice.json","w") as f:
+        json.dump(p_results,f,sort_keys=True,indent=4)
 
