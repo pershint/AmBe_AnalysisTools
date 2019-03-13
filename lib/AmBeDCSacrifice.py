@@ -111,8 +111,8 @@ class AmBeSacrificeComparer(object):
                 self.precuts_data[key].append('nhitsCleaned%s<%s'%(suf,str(self.cdict[key]['nhitsCleaned_high'])))
                 self.precuts_mc[key].append('nhitsCleaned%s<%s'%(suf,str(self.cdict[key]['nhitsCleaned_high'])))
             if self.cdict[key]['nhitsCleaned_low'] is not None:
-                self.precuts_data[key].append('nhitsCleaned%s>%s'%(suf,str(self.cdict[key]['nhitsCleaned_low'])))
-                self.precuts_mc[key].append('nhitsCleaned%s>%s'%(suf,str(self.cdict[key]['nhitsCleaned_low'])))
+                self.precuts_data[key].append('nhitsCleaned%s>=%s'%(suf,str(self.cdict[key]['nhitsCleaned_low'])))
+                self.precuts_mc[key].append('nhitsCleaned%s>=%s'%(suf,str(self.cdict[key]['nhitsCleaned_low'])))
             if self.cdict[key]['udotr_high'] is not None:
                 self.precuts_data[key].append('udotr%s<%s'%(suf,str(self.cdict[key]['udotr_high'])))
                 self.precuts_mc[key].append('udotr%s<%s'%(suf,str(self.cdict[key]['udotr_high'])))
@@ -215,10 +215,15 @@ class AmBeSacrificeComparer(object):
             xmin = xminimum[key]
             xmax = xmaximum[key]
             nbins = self.nbins[key]
+            oppdcmask = ""
             if key=="prompt":
                 suf = "_p"
+                oppsuf = "_d"
+                oppdcmask = self.cdict["delayed"]['sacDCmask']
             elif key=="delayed":
                 suf = "_d"
+                oppsuf="_p"
+                oppdcmask = self.cdict["prompt"]['sacDCmask']
             dcmask = self.cdict[key]['sacDCmask']
             if dcmask == None:
                 print("No DC mask in cuts config.  Please give a DC mask of cuts to plot")
@@ -241,18 +246,26 @@ class AmBeSacrificeComparer(object):
                 plotmask[dcmask] = "total"
             elif len(onlycuts)==0:
                 plotmask[dcmask] = "total"
+            dataallprecuts = (self.precuts_data["prompt"],
+                          self.precuts_data["delayed"],
+                          oppsuf,oppdcmask,oppdcmask)
+            dataprecutstring = "%s&&%s&&((dcFlagged%s&%i)==%i) " % dataallprecuts
+            mcallprecuts = (self.precuts_mc["prompt"],
+                          self.precuts_mc["delayed"],
+                          oppsuf,oppdcmask,oppdcmask)
+            mcprecutstring = "%s&&%s&&((dcFlagged%s&%i)==%i) " % mcallprecuts
             data.Draw("%s%s>>h_dallevents(%i,%f,%f)"% (var,suf,nbins,xmin,xmax),
-                    "%s" % (self.precuts_data[key]),"goff")
-            print("DATA CUTSTRING: " + "%s" % (self.precuts_data[key]))
-            numdata_precuts = data.GetEntries("%s" % (self.precuts_data[key]))
-            self.sac_percut_metadata["numdataevts_precuts_%s"%(key)] = numdata_precuts
+                     dataprecutstring,"goff")
+            print("DATA CUTSTRING: " + dataprecutstring)
+            numdata_precuts = data.GetEntries(dataprecutstring)
+            self.sac_percut_metadata["numdataevts_precuts"] = numdata_precuts
             MC.Draw("%s%s>>h_mallevents(%i,%f,%f)"% (var,suf,nbins,xmin,xmax),
-                    "%s" % (self.precuts_mc[key]),"goff")
-            print("DATA CUTSTRING: " + "%s" % (self.precuts_mc[key]))
-            nummc_precuts = data.GetEntries("%s" % (self.precuts_mc[key]))
-            self.sac_percut_metadata["nummcevts_precuts_%s"%(key)] = nummc_precuts
+                    mcprecutstring,"goff")
+            print("MC CUTSTRING: " + mcprecutstring)
+            nummc_precuts = data.GetEntries(mcprecutstring)
+            self.sac_percut_metadata["nummcevts_precuts"] = nummc_precuts
             print("TEST: ENTRIES IN DATA AFTER PRECUTS")
-            print(data.GetEntries("%s"%(self.precuts_data[key]))) 
+            print(data.GetEntries(dataprecutstring)) 
             h_dallevents = gDirectory.Get("h_dallevents")
             h_dallevents.Sumw2()
             h_mallevents = gDirectory.Get("h_mallevents")
@@ -271,19 +284,19 @@ class AmBeSacrificeComparer(object):
                 h_cut_mFracFlagged.Sumw2()
                 if self.precuts_data[key] is not None:
                     data.Draw("%s%s>>h_dflagged(%i,%f,%f)" % (var,suf,nbins,xmin,xmax),
-                            "%s"%(self.precuts_data[key])+\
+                            dataprecutstring+\
                                  "&&((dcFlagged%s&%i)!=%i)" % (suf,cutint,cutint),"goff")
                     print("TEST: NUM EVENTS AFTER DC APPLIED")
-                    print("THECUTS: %s"%("%s"%(self.precuts_data[key])+\
-                                 "&&((dcFlagged%s&%i)!=%i)" % (suf,cutint,cutint)))
-                    print(data.GetEntries("%s"%(self.precuts_data[key])+\
+                    print("THECUTS: %s"%(dataprecutstring)+\
+                                 "&&((dcFlagged%s&%i)!=%i)" % (suf,cutint,cutint))
+                    print(data.GetEntries(dataprecutstring+\
                                  "&&((dcFlagged%s&%i)!=%i)" % (suf,cutint,cutint)))
                 else:
                     data.Draw("%s%s>>h_dflagged(%i,%f,%f)" % (var,suf,nbins,xmin,xmax),
                             "((dcFlagged%s&%i)!=%i)" % (suf,cutint,cutint),"goff")
                 if self.precuts_mc[key] is not None:
                     MC.Draw("%s%s>>h_mflagged(%i,%f,%f)" % (var,suf,nbins,xmin,xmax),
-                            "%s"%(self.precuts_mc[key])+\
+                            mcprecutstring+\
                                  "&&((dcFlagged%s&%i)!=%i)" % (suf,cutint,cutint),"goff")
                 else:
                     MC.Draw("%s%s>>h_mflagged(%i,%f,%f)" % (var,suf,nbins,xmin,xmax),
@@ -298,7 +311,7 @@ class AmBeSacrificeComparer(object):
                 mc_sacdict = self._histToDict(h_cut_mFracFlagged)
                 self.sac_percut[key]["data"][plotmask[cut]]= pandas.DataFrame(data=data_sacdict)
                 self.sac_percut[key]["MC"][plotmask[cut]]= pandas.DataFrame(data=mc_sacdict)
-                self.sac_percut_metadata["binwidth_%s"%(key)] = (xmaximum[key]-xminimum[key])/float(self.nbins[key])
+                self.sac_percut_metadata["binwidth%s"%(suf)] = (xmaximum[key]-xminimum[key])/float(self.nbins[key])
                 del h_cut_dFracFlagged
                 del h_dflagged
                 del h_cut_mFracFlagged
@@ -309,6 +322,71 @@ class AmBeSacrificeComparer(object):
         #self._DeleteEmptyBins()
         print self.sac_percut
         return self.sac_percut, self.sac_percut_metadata
+
+    def DrawDirtyHist(self, evtype="pair",dattype="data",var="interevent_time",xmin=0., xmax=5.E5,nbins=100,addlROOTcuts=""):
+        histMeta = {"var":var, "evtype":evtype, "datatype":dattype, "xrange":[xmin,xmax],"nbins":nbins}
+        
+        #Load the data trees from data and MC rootfiles
+        data = ROOT.TChain("CombinedOutput")
+        MC = ROOT.TChain("CombinedOutput") 
+        for rf in self.rootfiles_data:
+            data.Add(rf)
+        for mf in self.rootfiles_mc:
+            MC.Add(mf)
+        if evtype=="prompt":
+            suf = "_p"
+            oppsuf = "_d"
+            oppdcmask = self.cdict["delayed"]['sacDCmask']
+        elif evtype=="delayed":
+            suf = "_d"
+            oppsuf="_p"
+            oppdcmask = self.cdict["prompt"]['sacDCmask']
+        else:
+            suf = ""
+        dcmask_prompt = self.cdict["prompt"]['sacDCmask']
+        dcmask_delayed = self.cdict["delayed"]['sacDCmask']
+        fullmask = mb.get_dcwords()
+        print(fullmask)
+        plotmask = {}
+        plotmask["_p"] = dcmask_prompt
+        plotmask["_d"] = dcmask_delayed 
+        print("THEPLOTMASK: " + str(plotmask))
+        dataallprecuts = (self.precuts_data["prompt"],
+                      self.precuts_data["delayed"],
+                      oppsuf,oppdcmask,oppdcmask)
+        dataprecutstring = "%s&&%s&&((dcFlagged%s&%i)==%i) " % dataallprecuts
+        mcallprecuts = (self.precuts_mc["prompt"],
+                      self.precuts_mc["delayed"],
+                      oppsuf,oppdcmask,oppdcmask)
+        mcprecutstring = "%s&&%s&&((dcFlagged%s&%i)==%i) " % mcallprecuts
+        precuts_data = dataprecutstring
+        precuts_mc = mcprecutstring 
+        #h_DirtyDistHist = ROOT.TH1D("h_DirtyDistHist", "h_DirtyDistHist", nbins,xmin,xmax)
+        #h_DirtyDistHist.Sumw2()
+        if dattype=="data":
+            if addlROOTcuts:
+                data.Draw("%s>>h_DirtyDistHist(%i,%f,%f)" % (var,nbins,xmin,xmax),
+                          "%s&&%s"%(precuts_data,addlROOTcuts),"goff")
+            else:
+                data.Draw("%s>>h_DirtyDistHist(%i,%f,%f)" % (var,nbins,xmin,xmax),
+                          "%s"%(precuts_data),"goff")
+            print("CUTS USED: %s&&%s"%(precuts_data,addlROOTcuts))
+        elif dattype=="MC":
+            if addlROOTcuts:
+                mc.Draw("%s>>h_DirtyDistHist(%i,%f,%f)" % (var,nbins,xmin,xmax),
+                        "%s&&%s"%(precuts_mc,addlROOTcuts),"goff")
+            else:
+                mc.Draw("%s>>h_DirtyDistHist(%i,%f,%f)" % (var,nbins,xmin,xmax),
+                        "%s"%(precuts_mc),"goff")
+            print("CUTS USED: %s&&%s"%(precuts_mc,addlROOTcuts))
+
+        h_DirtyDistHist = gDirectory.Get("h_DirtyDistHist")
+        h_DirtyDistHist.Sumw2()
+        histdict = self._histToDictXY(h_DirtyDistHist)
+        histPD= pandas.DataFrame(data=histdict)
+        del h_DirtyDistHist
+        #graphdict has the sacrifice information for each cut. Now, let's plot it.
+        return histPD, histMeta
 
     def DrawCleanHist(self, evtype="pair",dattype="data",var="interevent_time",xmin=0., xmax=5.E5,nbins=100,addlROOTcuts=""):
         histMeta = {"var":var, "evtype":evtype, "datatype":dattype, "xrange":[xmin,xmax],"nbins":nbins}
@@ -322,8 +400,12 @@ class AmBeSacrificeComparer(object):
             MC.Add(mf)
         if evtype=="prompt":
             suf = "_p"
+            oppsuf = "_d"
+            oppdcmask = self.cdict["delayed"]['sacDCmask']
         elif evtype=="delayed":
             suf = "_d"
+            oppsuf="_p"
+            oppdcmask = self.cdict["prompt"]['sacDCmask']
         else:
             suf = ""
         dcmask_prompt = self.cdict["prompt"]['sacDCmask']
@@ -334,8 +416,16 @@ class AmBeSacrificeComparer(object):
         plotmask["_p"] = dcmask_prompt
         plotmask["_d"] = dcmask_delayed 
         print("THEPLOTMASK: " + str(plotmask))
-        precuts_data = self.precuts_data["prompt"] + "&&" + self.precuts_data["delayed"]
-        precuts_mc = self.precuts_mc["prompt"] + "&&" + self.precuts_mc["delayed"]
+        dataallprecuts = (self.precuts_data["prompt"],
+                      self.precuts_data["delayed"],
+                      oppsuf,oppdcmask,oppdcmask)
+        dataprecutstring = "%s&&%s&&((dcFlagged%s&%i)!=%i) " % dataallprecuts
+        mcallprecuts = (self.precuts_mc["prompt"],
+                      self.precuts_mc["delayed"],
+                      oppsuf,oppdcmask,oppdcmask)
+        mcprecutstring = "%s&&%s&&((dcFlagged%s&%i)!=%i) " % mcallprecuts
+        precuts_data = dataprecutstring
+        precuts_mc = mcprecutstring 
         dcstring = ""
         for cut in plotmask:
             dcstring+="&&((dcFlagged%s&%i)==%i)" % (cut, plotmask[cut],plotmask[cut])
@@ -403,6 +493,11 @@ class AmBeSacrificeComparer(object):
         xkcd_colors = ['black','slate blue', 'fluro green', 'red', 'blue',
                 'yellowish orange', 'warm pink', 'light eggplant', 'clay', 'leaf',
                 'aqua blue','vomit', 'brown','twilight']
+        if evtype == "prompt":
+            suf = "_p"
+        elif evtype == "delayed":
+            suf = "_d"
+        binwidth = self.sac_percut_metadata["binwidth%s"%(suf)]
         sns.set_palette(sns.xkcd_palette(xkcd_colors))#,len(self.sac_percut)))
         fig = plt.figure()
         fig.set_size_inches(18.5,11.5)
@@ -413,6 +508,7 @@ class AmBeSacrificeComparer(object):
                 plt.errorbar(x=thiscut_dict.vardat, 
                         y=thiscut_dict.fractional_sacrifice,
                         yerr=thiscut_dict.fs_uncertainty,
+                        xerr=binwidth/2.,
                         linestyle='none', marker='o', label=cut, markersize=9,
                         elinewidth=2, capsize=0)
         else:
@@ -423,12 +519,14 @@ class AmBeSacrificeComparer(object):
                     plt.errorbar(x=thiscut_dict.vardat, 
                             y=thiscut_dict.fractional_sacrifice,
                             yerr=thiscut_dict.fs_uncertainty,
+                            xerr=binwidth/2.,
                             linestyle='none', marker='o', label=cut, markersize=9,
                             elinewidth=2, capsize=0)
                 else:
                     fracsum.append(self.sac_percut[evtype][dattype][cut].fractional_sacrifice)
                     fracuncsum.append(self.sac_percut[evtype][dattype][cut].fs_uncertainty)
-            plt.errorbar(x=self.sac_percut[evtype][dattype][cut].vardat,y=sum(fracsum),yerr=sum(fracuncsum),
+            plt.errorbar(x=self.sac_percut[evtype][dattype][cut].vardat,
+                    y=sum(fracsum),yerr=sum(fracuncsum), xerr=binwidth/2.,
                     linestyle='none',marker='o', capsize=0, elinewidth=2, label='All other cuts', markersize=9)
     
         if fittotal is True:
