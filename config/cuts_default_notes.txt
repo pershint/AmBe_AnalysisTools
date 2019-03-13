@@ -1,0 +1,48 @@
+
+Description of different cut configuration toggles
+
+Depending on your ultimate end-game, your config file will want to be configured
+differently.  Here is a guide for helping with this process/building your own
+config file.
+
+###----------PATHOLOGICAL CUTS FOR SACRIFICE-----------###
+Events that are considered pathological are not included in the
+               sacrifice studies.
+fitValid: if true, only events with a valid reconstruction will be used
+to estimate the sacrifice with calibration data/instrumental contamination with
+analysis data.  If false, events with AND without fitValid will be considered.
+
+
+isCal: if true, only events with the FECD PMT hit in the calibration data
+will be used to estimate the sacrifice with calibration data. 
+(You want this to be true if you're using N16 calibration data)
+
+AVudotrCut: if true, implements the AV cut used to select events from
+the AV ROI.  Specific function should be specified in waterdoc, but is:
+(udotr > (1.0 - 12 *((posr3-%f)**2)))"%(posr3_AVcut)
+
+
+E_high, E_low: Defines the energy range for events considered for sacrifice
+analysis
+nhits_high, nhits_low: Defines the nhit range for events consiered for
+sacrifice analyses
+Z_high,Z_low: Defines the z-range, in centimeters, for events considered for
+sacrifice studies
+r_high, r_low: Defines the radius, in millimeters, for events considered for
+sacrifice studies
+udotr_high, udotr_low: Defines the u.r value range for events considered for
+the sacrifice studies
+
+sacpath_DCmask: pathological cuts applied before estimating sacrifice using
+calibration data. Any
+event with one of the flags in this mask will not be used in the sacrifice/
+contamination studies.
+
+(Relevant for contamination study only. For most standalone DC sacrifice analyses,
+ you'll want sacpath_DCmask to be set to zero.)
+
+
+path_trigmask: Any events with a flag from this trigger mask
+ will not be considered/used for the sacrifice studies
+(ND contamination analysis default is esumhi, esumlo, ped, pgt)
+(When doing most DC sacrifice studies, you'll want this to be set to zero)

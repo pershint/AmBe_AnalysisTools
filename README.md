@@ -10,15 +10,23 @@ Scripts and directories of interest:
     2. Process all data with find_prompt_delayed.py.  The script opens root files
        and creates prompt/delayed pairs based on nhit/time/fit criteria given as
        flags at runtime.
-    SacrificeEval.py: runs the sacrifice plot maker class on all data in the 
-    directories specified inside of SacrificeEval.py.  You will have to open
+    /scripts/: Provides examples of how to use the AmBe data cleaning classes
+    in lib.  
+      * SacrificeEval.py:runs the sacrifice plot maker class on all data in the 
+    directories specified inside of the SacrificeEval.py script.  You will have to open
     SacrificeEval.py in a text editor and point to the directories where your
     freshly made processed/production (data/MC) subtuples are.
-  - /plots/: functions that can prepare data output from find_prompt_delayed.py
-    for plotting with matplotlib/seaborn.  Plots also perform fits and output
-    deviation from flat for use in systematic uncertainty calculation.
-  - /uncertainties/: Script for calculating the uncertainty of the neutron
-    capture's data cleaning sacrifice.  Mostly deprecated at this point, but
+      * NeutronSacrifice.py: Runs a script that calculates the 4.4 MeV gamma
+    and neutron sacrifices using information from fits to the data's interevent
+    time distribution.  
+  - /lib/: Contains classes that can open SNO+ ntuples and estimate the data 
+    cleaning sacrifice.  Given a config file (see /config/), different preliminary
+    cuts can be applied prior to evaluating the data cleaning sacrifice.
+  - /config/: Examples of configuration files read in by the classes defined in 
+    files in the /lib/ directory.  A text file in this directory gives a rundown
+    of how each toggle can be used when evaluating the DC sacrifice on data.
+  - /uncertainties/: Old ript for calculating the uncertainty of the neutron
+    capture's data cleaning sacrifice.  Deprecated at this point, but
     you may find use for it.  The data cleaning sacrifices and event
     rates in N16, AmBe, and background data must be put into a JSON format and
     fed into CalculateUncertainty.py (see values.json for example).  See Teal's
