@@ -323,7 +323,7 @@ class AmBeSacrificeComparer(object):
         print self.sac_percut
         return self.sac_percut, self.sac_percut_metadata
 
-    def DrawDirtyHist(self, evtype="pair",dattype="data",var="interevent_time",xmin=0., xmax=5.E5,nbins=100,addlROOTcuts=""):
+    def DrawITHistAll(self, evtype="pair",dattype="data",var="interevent_time",xmin=0., xmax=5.E5,nbins=100,addlROOTcuts=""):
         histMeta = {"var":var, "evtype":evtype, "datatype":dattype, "xrange":[xmin,xmax],"nbins":nbins}
         
         #Load the data trees from data and MC rootfiles
@@ -388,7 +388,7 @@ class AmBeSacrificeComparer(object):
         #graphdict has the sacrifice information for each cut. Now, let's plot it.
         return histPD, histMeta
 
-    def DrawCleanHist(self, evtype="pair",dattype="data",var="interevent_time",xmin=0., xmax=5.E5,nbins=100,addlROOTcuts=""):
+    def DrawHist(self, evtype="prompt",dattype="data",var="interevent_time",xmin=0., xmax=5.E5,nbins=100,addlROOTcuts="",dctype="clean"):
         histMeta = {"var":var, "evtype":evtype, "datatype":dattype, "xrange":[xmin,xmax],"nbins":nbins}
         
         #Load the data trees from data and MC rootfiles
@@ -419,41 +419,46 @@ class AmBeSacrificeComparer(object):
         dataallprecuts = (self.precuts_data["prompt"],
                       self.precuts_data["delayed"],
                       oppsuf,oppdcmask,oppdcmask)
-        dataprecutstring = "%s&&%s&&((dcFlagged%s&%i)!=%i) " % dataallprecuts
+        dataprecutstring = "%s&&%s&&((dcFlagged%s&%i)==%i) " % dataallprecuts
         mcallprecuts = (self.precuts_mc["prompt"],
                       self.precuts_mc["delayed"],
                       oppsuf,oppdcmask,oppdcmask)
-        mcprecutstring = "%s&&%s&&((dcFlagged%s&%i)!=%i) " % mcallprecuts
+        mcprecutstring = "%s&&%s&&((dcFlagged%s&%i)==%i) " % mcallprecuts
         precuts_data = dataprecutstring
         precuts_mc = mcprecutstring 
         dcstring = ""
         for cut in plotmask:
-            dcstring+="&&((dcFlagged%s&%i)==%i)" % (cut, plotmask[cut],plotmask[cut])
+            if dctype=="clean" and cut == suf:
+                dcstring+="&&((dcFlagged%s&%i)==%i)" % (cut, plotmask[cut],plotmask[cut])
+            elif dctype=="dirty" and cut == suf:
+                dcstring+="&&((dcFlagged%s&%i)!=%i)" % (cut, plotmask[cut],plotmask[cut])
 
-        #h_CleanDistHist = ROOT.TH1D("h_CleanDistHist", "h_CleanDistHist", nbins,xmin,xmax)
-        #h_CleanDistHist.Sumw2()
+        #h_DistHist = ROOT.TH1D("h_DistHist", "h_DistHist", nbins,xmin,xmax)
+        #h_DistHist.Sumw2()
+        if var != "interevent_time" and var != "interevent_dist":
+            var+=suf
         if dattype=="data":
             if addlROOTcuts:
-                data.Draw("%s%s>>h_CleanDistHist(%i,%f,%f)" % (var,suf,nbins,xmin,xmax),
+                data.Draw("%s>>h_DistHist(%i,%f,%f)" % (var,nbins,xmin,xmax),
                           "%s%s&&%s"%(precuts_data,dcstring,addlROOTcuts),"goff")
             else:
-                data.Draw("%s%s>>h_CleanDistHist(%i,%f,%f)" % (var,suf,nbins,xmin,xmax),
+                data.Draw("%s>>h_DistHist(%i,%f,%f)" % (var,nbins,xmin,xmax),
                           "%s%s"%(precuts_data,dcstring),"goff")
             print("CUTS USED: %s%s&&%s"%(precuts_data,dcstring,addlROOTcuts))
         elif dattype=="MC":
             if addlROOTcuts:
-                mc.Draw("%s%s>>h_CleanDistHist(%i,%f,%f)" % (var,suf,nbins,xmin,xmax),
+                mc.Draw("%s>>h_DistHist(%i,%f,%f)" % (var,nbins,xmin,xmax),
                         "%s%s&&%s"%(precuts_mc,dcstring,addlROOTcuts),"goff")
             else:
-                mc.Draw("%s%s>>h_CleanDistHist(%i,%f,%f)" % (var,suf,nbins,xmin,xmax),
+                mc.Draw("%s>>h_DistHist(%i,%f,%f)" % (var,nbins,xmin,xmax),
                         "%s%s"%(precuts_mc,dcstring),"goff")
             print("CUTS USED: %s%s&&%s"%(precuts_mc,dcstring,addlROOTcuts))
 
-        h_CleanDistHist = gDirectory.Get("h_CleanDistHist")
-        h_CleanDistHist.Sumw2()
-        histdict = self._histToDictXY(h_CleanDistHist)
+        h_DistHist = gDirectory.Get("h_DistHist")
+        h_DistHist.Sumw2()
+        histdict = self._histToDictXY(h_DistHist)
         histPD= pandas.DataFrame(data=histdict)
-        del h_CleanDistHist
+        del h_DistHist
         #graphdict has the sacrifice information for each cut. Now, let's plot it.
         return histPD, histMeta
 

@@ -91,15 +91,16 @@ if __name__=='__main__':
                                                      dctype="clean")
     #Neat.  Now, let's fit to our clean and dirty distributions
     doubleexp = lambda x,A1,l1,A2,l2: A1*np.exp(-l1*x) + A2*np.exp(-l2*x)
+    singleexp = lambda x,A1,l1: A1*np.exp(-l1*x)
     mycleanfitter = sf.Fitter(datax=CleanIThist["x"],datay=CleanIThist["y"],
                       datasigma=CleanIThist["y_unc"])
-    mycleanfitter.SetFitFunction(doubleexp, 4)
-    initvars = [200., 1./20000.,15, 1E-7]
+    mycleanfitter.SetFitFunction(singleexp, 2)
+    initvars = [200., 1./20000.]
     popt, pcov = mycleanfitter.RunFit(initvars)
     plt.errorbar(x=CleanIThist["x"],y=CleanIThist["y"],yerr=CleanIThist["y_unc"],
                  linestyle='none',marker='o',markersize=7)
-    bestlin1 = doubleexp(CleanITHist["x"],popt[0], popt[1], popt[2], popt[3])
-    plt.plot(CleanITHist["x"],bestlin1)
+    bestlin1 = popt[0]*np.exp(-popt[1]*CleanIThist["x"])
+    plt.plot(CleanIThist["x"],bestlin1,label=r"Best fit, $\tau=%s \, ms$"%(str(np.round((1./(1E6*popt[1])),2))))
     plt.legend(loc=1)
     plt.xlabel("Interevent Time (ns)")
     plt.ylabel("Events")
@@ -109,13 +110,13 @@ if __name__=='__main__':
     
     mydirtyfitter = sf.Fitter(datax=PDirtyIThist["x"],datay=PDirtyIThist["y"],
                       datasigma=PDirtyIThist["y_unc"])
-    mydirtyfitter.SetFitFunction(doubleexp, 4)
-    initvars = [200., 1./20000.,15, 1E-7]
+    mydirtyfitter.SetFitFunction(singleexp, 2)
+    initvars = [200., 1./20000.]
     popt, pcov = mydirtyfitter.RunFit(initvars)
     plt.errorbar(x=PDirtyIThist["x"],y=PDirtyIThist["y"],yerr=PDirtyIThist["y_unc"],
                  linestyle='none',marker='o',markersize=7)
-    bestlin1 = doubleexp(PDirtyITHist["x"],popt[0], popt[1], popt[2], popt[3])
-    plt.plot(PDirtyITHist["x"],bestlin1)
+    bestfitline = popt[0]*np.exp(-popt[1]*PDirtyIThist["x"])
+    plt.plot(PDirtyIThist["x"],bestfitline,label=r"Best fit, $\tau=%s \, ms$"%(str(np.round((1./(1E6*popt[1])),2))))
     plt.legend(loc=1)
     plt.xlabel("Interevent Time (ns)")
     plt.ylabel("Events")
@@ -123,15 +124,15 @@ if __name__=='__main__':
                "Delayed pass cuts, Prompt only fails DC cuts"))
     plt.show()
     
-    mydirtyfitter = sf.Fitter(datax=DDirtyIThist["x"],datay=DDirtyIThist["y"],
+    myddirtyfitter = sf.Fitter(datax=DDirtyIThist["x"],datay=DDirtyIThist["y"],
                       datasigma=DDirtyIThist["y_unc"])
-    mydirtyfitter.SetFitFunction(doubleexp, 4)
-    initvars = [200., 1./20000.,15, 1E-7]
-    popt, pcov = mydirtyfitter.RunFit(initvars)
+    myddirtyfitter.SetFitFunction(singleexp, 2)
+    initvars = [200., 1./20000.]
+    popt, pcov = myddirtyfitter.RunFit(initvars)
     plt.errorbar(x=DDirtyIThist["x"],y=DDirtyIThist["y"],yerr=DDirtyIThist["y_unc"],
                  linestyle='none',marker='o',markersize=7)
-    bestlin1 = doubleexp(DDirtyITHist["x"],popt[0], popt[1], popt[2], popt[3])
-    plt.plot(DDirtyITHist["x"],bestlin1)
+    bestfitline = popt[0]*np.exp(-popt[1]*DDirtyIThist["x"])
+    plt.plot(DDirtyIThist["x"],bestfitline,label=r"Best fit, $\tau=%s \, ms$"%(str(np.round((1./(1E6*popt[1])),2))))
     plt.legend(loc=1)
     plt.xlabel("Interevent Time (ns)")
     plt.ylabel("Events")
